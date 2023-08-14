@@ -1,0 +1,47 @@
+[
+    {
+        "name": "configuration",
+        "label": "Settings",
+        "api_url": "api/configuration",
+        "sequence": 1,
+        "parent_id": null,
+        "level": 0,
+        "is_active": true
+    },
+    {
+        "name": "menu",
+        "label": "app menu",
+        "api_url": "api/appmenu",
+        "sequence": 2,
+        "parent_id": null,
+        "level": 0,
+        "is_active": true
+    },
+        {
+            "name": "menu_access",
+            "label": "Menu Access",
+            "api_url": "api/menu_access",
+            "sequence": 1,
+            "parent_id": "menu",
+            "level": 1,
+            "is_active": true
+        },
+    {
+        "name": "user_management",
+        "label": "User Management",
+        "api_url": "api/user",
+        "sequence": 3,
+        "parent_id": null,
+        "level": 0,
+        "is_active": true
+    },
+    {
+        "name": "usergroup",
+        "label": "Usergroup",
+        "api_url": "api/usergroup",
+        "sequence": 4,
+        "parent_id": null,
+        "level": 0,
+        "is_active": true
+    }
+]

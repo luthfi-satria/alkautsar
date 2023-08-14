@@ -1,0 +1,56 @@
+[
+    {
+        "id": 1,
+        "ref_id": "GLOBAL",
+        "name": "GLOBAL",
+        "desc": "Change this value to global setup",
+        "scope": "global",
+        "value": {
+            "maintenance": false
+        },
+        "is_active": true
+    },
+    {
+        "id": 2,
+        "ref_id": "SCHEDULLER",
+        "name": "SCHEDULLER",
+        "desc": "Change this value to setup cron for feature",
+        "scope": "scheduller",
+        "value": {
+            "usergroup" : {
+                "process_active" : true,
+                "timespan": 20,
+                "last_update" : null,
+                "refresh": 60,
+                "data_limit": 20,
+                "offset": 0,
+                "total_data": 0,
+                "iteration": 1,
+                "desc": "timespan, refresh is counting in second"
+            },
+            "menu" : {
+                "process_active" : true,
+                "timespan": 20,
+                "last_update" : null,
+                "refresh": 60,
+                "data_limit": 20,
+                "offset": 0,
+                "total_data": 0,
+                "iteration": 1,
+                "desc": "timespan, refresh is counting in second"
+            }
+        },
+        "is_active": true
+    },
+    {
+        "id": 3,
+        "ref_id": "PAGINATION",
+        "name": "PAGINATION",
+        "desc": "Change this value to setup data pagination",
+        "scope": "pagination",
+        "value": {
+            "limit" : 10
+        },
+        "is_active": true
+    }
+]

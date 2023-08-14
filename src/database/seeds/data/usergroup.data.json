@@ -1,0 +1,17 @@
+[
+    {
+        "id": 1,
+        "name": "admin",
+        "is_default": false
+    },
+    {
+        "id": 2,
+        "name": "staff",
+        "is_default": false
+    },
+    {
+        "id": 3,
+        "name": "wali",
+        "is_default": true
+    }
+]

@@ -1,0 +1,40 @@
+version: '3'
+services:
+  mariadb:
+    image: mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD=S3cret
+      - MYSQL_PASSWORD=@lkauts4r
+      - MYSQL_USER=sditalkautsar
+      - MYSQL_DATABASE=alkautsar
+    volumes:
+      - mariadata:/var/lib/mysql/data:rw
+      - marialog:/var/lib/mysql/logs:rw
+      - /var/docker/mariadb/conf:/etc/mysql
+    ports:
+      - '3306:3306'
+    networks:
+      - alkautsar
+
+  redis:
+    image: bitnami/redis:latest
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - redisdata:/bitnami/redis/data:rw
+    ports:
+      - '6379:6379'
+    networks:
+      - alkautsar
+
+networks: 
+    alkautsar:
+        driver: bridge
+
+volumes:
+  mariadata:
+    driver: local
+  marialog:
+    driver: local
+  redisdata:
+    driver: local
