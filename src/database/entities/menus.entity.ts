@@ -15,28 +15,28 @@ export class AppmenusDocument {
   @Column({ unique: true, length: 45 })
   name?: string;
 
-  @Column({ length: 45 })
+  @Column({ length: 45, nullable: true })
   label?: string;
 
-  @Column({ length: 200 })
+  @Column({ length: 200, nullable: true })
   api_url?: string;
 
-  @Column({ type: 'tinyint' })
+  @Column({ type: 'tinyint', default: 1 })
   sequence?: number;
 
-  @Column()
+  @Column({ nullable: true })
   parent_id?: number;
 
-  @Column()
+  @Column({ default: 0 })
   level?: number;
 
-  @Column()
+  @Column({ default: true })
   is_active?: boolean;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamp', nullable: true })
   created_at?: Date | string;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamp', nullable: true })
   updated_at?: Date | string;
 
   @DeleteDateColumn({ type: 'timestamp' })

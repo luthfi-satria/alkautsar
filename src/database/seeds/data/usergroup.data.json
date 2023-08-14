@@ -13,5 +13,10 @@
         "id": 3,
         "name": "wali",
         "is_default": true
+    },
+    {
+        "id": 4,
+        "name": "investor",
+        "is_default": false
     }
 ]

@@ -23,7 +23,7 @@ export class AppmenuController {
   constructor(private readonly appmenuService: AppmenuService) {}
 
   @Post()
-  @UserType('admin')
+  @UserType('owner')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async create(@Body() body: AppmenuDto) {
@@ -32,7 +32,7 @@ export class AppmenuController {
   }
 
   @Get()
-  @UserType('admin')
+  @UserType('owner')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async findAll(@Param() param: ListAppmenu) {
@@ -40,7 +40,7 @@ export class AppmenuController {
   }
 
   @Get(':id')
-  @UserType('admin')
+  @UserType('owner')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async findOne(@Param() param: GetAppmenuID) {
@@ -48,7 +48,7 @@ export class AppmenuController {
   }
 
   @Put(':id')
-  @UserType('admin')
+  @UserType('owner')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async update(@Param() param: GetAppmenuID, @Body() Body: UpdateAppmenuDto) {
@@ -56,7 +56,7 @@ export class AppmenuController {
   }
 
   @Delete(':id')
-  @UserType('admin')
+  @UserType('owner')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async delete(@Param() param: GetAppmenuID) {

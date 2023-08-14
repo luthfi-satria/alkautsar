@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
   Min,
+  ValidateIf,
 } from 'class-validator';
 
 export class AppmenuDto {
@@ -25,9 +26,10 @@ export class AppmenuDto {
   @IsNumber()
   sequence: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
-  parent_id: number;
+  @ValidateIf((object) => (object.parent_id == null ? 0 : object.parent_id))
+  parent_id?: number;
 
   @IsNotEmpty()
   @IsNumber()
@@ -51,9 +53,10 @@ export class UpdateAppmenuDto {
   @IsNumber()
   sequence: number;
 
-  @IsNotEmpty()
-  @IsString()
-  parent_id: string;
+  @IsOptional()
+  @ValidateIf((object) => (object.parent_id == null ? 0 : object.parent_id))
+  @IsNumber()
+  parent_id: number | null;
 
   @IsNotEmpty()
   @IsNumber()
@@ -66,11 +69,19 @@ export class UpdateAppmenuDto {
 
 export class GetAppmenuID {
   @IsNotEmpty()
-  @IsNumber()
-  id: number;
+  @IsString()
+  id: string;
 }
 
-export class ListAppmenu extends AppmenuDto {
+export class ListAppmenu {
+  @IsOptional()
+  @IsString()
+  name: string;
+
+  @IsOptional()
+  @IsNumber()
+  level: number;
+
   @IsOptional()
   @IsNumber()
   @Type(() => Number)

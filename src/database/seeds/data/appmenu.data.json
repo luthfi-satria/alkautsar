@@ -1,5 +1,6 @@
 [
     {
+        "id": 1,
         "name": "configuration",
         "label": "Settings",
         "api_url": "api/configuration",
@@ -9,6 +10,7 @@
         "is_active": true
     },
     {
+        "id": 2,
         "name": "menu",
         "label": "app menu",
         "api_url": "api/appmenu",
@@ -18,15 +20,17 @@
         "is_active": true
     },
         {
+            "id": 3,
             "name": "menu_access",
             "label": "Menu Access",
             "api_url": "api/menu_access",
             "sequence": 1,
-            "parent_id": "menu",
+            "parent_id": 2,
             "level": 1,
             "is_active": true
         },
     {
+        "id": 4,
         "name": "user_management",
         "label": "User Management",
         "api_url": "api/user",
@@ -36,12 +40,33 @@
         "is_active": true
     },
     {
+        "id": 5,
         "name": "usergroup",
         "label": "Usergroup",
         "api_url": "api/usergroup",
         "sequence": 4,
         "parent_id": null,
         "level": 0,
+        "is_active": true
+    },
+    {
+        "id": 6,
+        "name": "product",
+        "label": "Produk",
+        "api_url": "api/product",
+        "sequence": 1,
+        "parent_id": null,
+        "level": 0,
+        "is_active": true
+    },
+    {
+        "id": 7,
+        "name": "kategori",
+        "label": "Kategori Produk",
+        "api_url": "api/category",
+        "sequence": 1,
+        "parent_id": 6,
+        "level": 1,
         "is_active": true
     }
 ]

@@ -22,8 +22,24 @@ export class AppmenuService {
       const page = param.page || 1;
       const skip = (page - 1) * limit;
 
-      const [findQuery, count] = await this.appmenuRepo
-        .createQueryBuilder()
+      const filter: any = [];
+      if (Object.keys(param).length > 0) {
+        for (const items in param) {
+          if (['limit', 'page', 'skip'].includes(items) == false) {
+            const filterVal = ['LIKE', `'%${param[items]}%'`];
+            filter.push(`${items} ${filterVal[0]} ${filterVal[1]}`);
+          }
+        }
+      }
+
+      const query = this.appmenuRepo.createQueryBuilder();
+
+      if (filter.length > 0) {
+        const queryFilter = filter.join(' AND ');
+        query.where(queryFilter);
+      }
+
+      const [findQuery, count] = await query
         .skip(skip)
         .limit(limit)
         .getManyAndCount();
@@ -48,7 +64,7 @@ export class AppmenuService {
   }
 
   async findOne(search: any) {
-    return await this.appmenuRepo.findOne(search);
+    return await this.appmenuRepo.findOneBy(search);
   }
 
   async getDetailMenu(id) {
