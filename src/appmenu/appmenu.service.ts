@@ -40,6 +40,8 @@ export class AppmenuService {
       }
 
       const [findQuery, count] = await query
+        .orderBy('level', 'ASC')
+        .addOrderBy('sequence', 'ASC')
         .skip(skip)
         .limit(limit)
         .getManyAndCount();

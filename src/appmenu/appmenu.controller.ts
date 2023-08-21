@@ -6,6 +6,7 @@ import {
   Get,
   Put,
   Delete,
+  Query,
   UseInterceptors,
 } from '@nestjs/common';
 import { ResponseStatusCode } from '../response/response.decorator';
@@ -38,7 +39,7 @@ export class AppmenuController {
   @UserType('owner')
   @AuthJwtGuard()
   @ResponseStatusCode()
-  async findAll(@Param() param: ListAppmenu) {
+  async findAll(@Query() param: ListAppmenu) {
     return await this.appmenuService.getAll(param);
   }
 

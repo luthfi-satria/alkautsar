@@ -52,7 +52,6 @@ export class AuthController {
   }
 
   @AuthJwtGuard()
-  @UserType('owner')
   @Get('validate-token')
   @ResponseStatusCode()
   async validateToken(@Headers('Authorization') token: string): Promise<any> {

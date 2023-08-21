@@ -35,6 +35,10 @@ export class AppmenuDto {
   @IsNumber()
   level: number;
 
+  @IsOptional()
+  @IsString()
+  icon?: string;
+
   @IsNotEmpty()
   @IsBoolean()
   is_active: boolean;
@@ -61,6 +65,10 @@ export class UpdateAppmenuDto {
   @IsNotEmpty()
   @IsNumber()
   level: number;
+
+  @IsOptional()
+  @IsString()
+  icon?: string;
 
   @IsNotEmpty()
   @IsBoolean()

@@ -30,6 +30,9 @@ export class AppmenusDocument {
   @Column({ default: 0 })
   level?: number;
 
+  @Column({ nullable: true })
+  icon?: string;
+
   @Column({ default: true })
   is_active?: boolean;
 
