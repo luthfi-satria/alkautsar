@@ -3,7 +3,6 @@ import { ResponseService } from '../response/response.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AccessDocument } from '../database/entities/usergroup_access.entity';
 import { RSuccessMessage } from '../response/response.interface';
-import { DatetimeHelper } from '../helper/datetime.helper';
 import { ListAccessmenu } from './dto/usergroup_access.dto';
 import { UsergroupService } from '../usergroup/usergroup.service';
 import { Repository } from 'typeorm';
@@ -24,15 +23,34 @@ export class UsergroupAccessService {
       const page = param.page || 1;
       const skip = (page - 1) * limit;
 
-      const [findQuery, count] = await this.accessRepo
-        .createQueryBuilder()
+      const filter: any = [];
+      if (Object.keys(param).length > 0) {
+        for (const items in param) {
+          if (['limit', 'page', 'skip'].includes(items) == false) {
+            const filterVal = ['LIKE', `'%${param[items]}%'`];
+            filter.push(`access_menu.${items} ${filterVal[0]} ${filterVal[1]}`);
+          }
+        }
+      }
+
+      const query = this.accessRepo
+        .createQueryBuilder('access_menu')
+        .leftJoinAndSelect('access_menu.usergroup', 'group')
+        .leftJoinAndSelect('access_menu.menus', 'appmenus');
+
+      if (filter.length > 0) {
+        const queryFilter = filter.join(' AND ');
+        query.where(queryFilter);
+      }
+
+      const [findQuery, count] = await query
         .skip(skip)
         .limit(limit)
         .getManyAndCount();
 
       const results: RSuccessMessage = {
         success: true,
-        message: 'Get List access success',
+        message: 'Get menu access success',
         data: {
           total: count,
           page: page,
@@ -56,12 +74,16 @@ export class UsergroupAccessService {
   async getAccess(user) {
     try {
       const usergroup = await this.usergroupService.findOne({
-        name: user.usergroup,
+        id: user.usergroup,
       });
       if (usergroup) {
-        const getAccess = await this.accessRepo.findOneBy({
-          usergroup_id: usergroup?.id,
-        });
+        const getAccess = await this.accessRepo
+          .createQueryBuilder('access_menu')
+          .leftJoinAndSelect('access_menu.usergroup', 'group')
+          .leftJoinAndSelect('access_menu.menus', 'appmenu')
+          .where('group.id = :group_id', { group_id: usergroup.id })
+          .andWhere('appmenu.is_active = :isActive', { isActive: true })
+          .getMany();
 
         if (getAccess) {
           return this.responseService.success(true, 'access menu', getAccess);
@@ -96,11 +118,6 @@ export class UsergroupAccessService {
           'access menu already configured',
         );
       }
-
-      body.usergroup = body.usergroup_id;
-      body.menu = body.menu_id;
-      delete body.usergroup_id;
-      delete body.menu_id;
 
       const save = await this.accessRepo
         .save(body)

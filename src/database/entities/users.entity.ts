@@ -28,7 +28,7 @@ export class UserDocuments {
   @Column()
   phone?: string;
 
-  @Column()
+  @Column({ type: 'enum', enum: UserType, default: UserType.User })
   user_type?: UserType;
 
   @Column()

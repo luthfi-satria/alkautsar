@@ -6,6 +6,7 @@ import {
   Put,
   Body,
   Param,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UsergroupAccessService } from './usergroup_access.service';
 import { ResponseStatusCode } from '../response/response.decorator';
@@ -17,14 +18,16 @@ import {
   ListAccessmenu,
   UsergroupAccessDto,
 } from './dto/usergroup_access.dto';
+import { AppconfigInterceptor } from '../appconfig/appconfig.interceptor';
 
 @Controller('api/access')
+@UseInterceptors(AppconfigInterceptor)
 export class UsergroupAccessController {
   constructor(private readonly accessService: UsergroupAccessService) {}
 
   @Get()
   @ResponseStatusCode()
-  @UserType('admin')
+  @UserType('owner', 'staff')
   @AuthJwtGuard()
   async getAllAccess(@Body() body: ListAccessmenu) {
     return await this.accessService.getAll(body);
@@ -32,7 +35,7 @@ export class UsergroupAccessController {
 
   @Get('/user')
   @ResponseStatusCode()
-  @UserType('admin')
+  @UserType('owner', 'staff')
   @AuthJwtGuard()
   async getAccess(@User() user) {
     return await this.accessService.getAccess(user);
@@ -40,7 +43,7 @@ export class UsergroupAccessController {
 
   @Post()
   @ResponseStatusCode()
-  @UserType('admin')
+  @UserType('owner', 'staff')
   @AuthJwtGuard()
   async create(@Body() body: UsergroupAccessDto) {
     return await this.accessService.create(body);
@@ -48,7 +51,7 @@ export class UsergroupAccessController {
 
   @Put(':id')
   @ResponseStatusCode()
-  @UserType('admin')
+  @UserType('owner', 'staff')
   @AuthJwtGuard()
   async update(
     @Param() param: GetUsergroupAccessID,
@@ -59,7 +62,7 @@ export class UsergroupAccessController {
 
   @Delete(':id')
   @ResponseStatusCode()
-  @UserType('admin')
+  @UserType('owner', 'staff')
   @AuthJwtGuard()
   async delete(@Param() param: GetUsergroupAccessID) {
     return await this.accessService.delete(param.id);

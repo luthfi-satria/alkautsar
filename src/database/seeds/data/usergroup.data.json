@@ -2,21 +2,25 @@
     {
         "id": 1,
         "name": "admin",
+        "level": "owner",
         "is_default": false
     },
     {
         "id": 2,
         "name": "staff",
+        "level": "owner",
         "is_default": false
     },
     {
         "id": 3,
         "name": "wali",
+        "level": "public",
         "is_default": true
     },
     {
         "id": 4,
         "name": "investor",
+        "level": "organisasi",
         "is_default": false
     }
 ]

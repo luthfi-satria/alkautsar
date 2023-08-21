@@ -19,17 +19,16 @@ export class AccessDocument {
   @Column()
   usergroup_id: number;
 
-  @ManyToOne(() => UsergroupDocument, (group) => group.id)
+  @ManyToOne(() => UsergroupDocument, (usergroup) => usergroup.id, {
+    eager: true,
+  })
   @JoinColumn({ name: 'usergroup_id' })
-  usergroups?: UsergroupDocument;
-
-  @Column()
-  level?: string;
+  usergroup?: UsergroupDocument;
 
   @Column()
   menu_id?: number;
 
-  @ManyToOne(() => AppmenusDocument, (appmenu) => appmenu.id)
+  @ManyToOne(() => AppmenusDocument, (menus) => menus.id, { eager: true })
   @JoinColumn({ name: 'menu_id' })
   menus?: AppmenusDocument;
 

@@ -84,7 +84,7 @@ export class UsergroupService {
 
   async update(id, body: UsergroupDto) {
     try {
-      const isExists = await this.usergroupRepo.findBy({ id: id });
+      const isExists = await this.usergroupRepo.findOneBy({ id: id });
 
       if (!isExists) {
         return this.responseService.error(
@@ -99,10 +99,8 @@ export class UsergroupService {
       }
 
       const updated = Object.assign(isExists, body);
-      const updateUsergroup = await this.usergroupRepo.update(
-        { id: id },
-        updated,
-      );
+
+      const updateUsergroup = await this.usergroupRepo.save(updated);
 
       if (updateUsergroup) {
         return this.responseService.success(

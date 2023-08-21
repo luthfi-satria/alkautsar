@@ -1,9 +1,14 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { UserType } from '../../hash/guard/interface/user.interface';
 
 export class UsergroupDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @IsEnum(UserType)
+  @IsNotEmpty()
+  level: UserType;
 
   @IsBoolean()
   is_default: boolean;
@@ -11,6 +16,6 @@ export class UsergroupDto {
 
 export class GetUsergroupID {
   @IsNotEmpty()
-  @IsNumber()
-  id: number;
+  @IsString()
+  id: string;
 }

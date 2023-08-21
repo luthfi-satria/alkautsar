@@ -21,7 +21,7 @@ export class UsergroupController {
   constructor(private readonly usergroupService: UsergroupService) {}
 
   @Post()
-  @UserType('admin')
+  @UserType('owner')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async create(@Body() body: UsergroupDto) {
@@ -30,7 +30,7 @@ export class UsergroupController {
   }
 
   @Get()
-  @UserType('admin')
+  @UserType('owner')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async findAll() {
@@ -38,7 +38,7 @@ export class UsergroupController {
   }
 
   @Get(':id')
-  @UserType('admin')
+  @UserType('owner')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async findOne(@Param() param: GetUsergroupID) {
@@ -46,7 +46,7 @@ export class UsergroupController {
   }
 
   @Put(':id')
-  @UserType('admin')
+  @UserType('owner')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async update(@Param() param: GetUsergroupID, @Body() Body: UsergroupDto) {
@@ -54,7 +54,7 @@ export class UsergroupController {
   }
 
   @Delete(':id')
-  @UserType('admin')
+  @UserType('owner')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async delete(@Param() param: GetUsergroupID) {

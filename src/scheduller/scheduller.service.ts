@@ -18,7 +18,7 @@ export class SchedullerService {
    * Synchroinizing apps config into redis storage every hour
    * @returns
    */
-  @Cron('0 0 * * * *', {
+  @Cron('0 0 0 * * *', {
     name: 'synchronize application configs',
   })
   async AppConfigHandle() {

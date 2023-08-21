@@ -17,9 +17,22 @@ export class AuthService {
     const user = await this.userService.findOne({ email: email });
     let validate = false;
 
-    if (user) {
-      validate = await this.validatePassword(password, user.password);
+    if (!user) {
+      const errors: RMessage = {
+        value: email,
+        property: 'email',
+        constraint: ['Email is not found'],
+      };
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          errors,
+          'Bad Request',
+        ),
+      );
     }
+
+    validate = await this.validatePassword(password, user.password);
 
     if (!validate) {
       const errors: RMessage = {

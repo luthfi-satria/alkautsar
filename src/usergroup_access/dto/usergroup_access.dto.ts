@@ -1,27 +1,21 @@
 import { Type } from 'class-transformer';
 import {
   IsArray,
-  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
   Min,
 } from 'class-validator';
-import { UserType } from '../../hash/guard/interface/user.interface';
 
 export class UsergroupAccessDto {
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  usergroup_id: string;
+  usergroup_id: number;
 
-  @IsEnum(UserType)
+  @IsNumber()
   @IsNotEmpty()
-  level: UserType;
-
-  @IsString()
-  @IsNotEmpty()
-  menu_id: string;
+  menu_id: number;
 
   @IsArray()
   @IsNotEmpty()

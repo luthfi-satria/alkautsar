@@ -6,6 +6,7 @@ import {
   Get,
   Put,
   Delete,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ResponseStatusCode } from '../response/response.decorator';
 import { UserType } from '../hash/guard/user-type.decorator';
@@ -17,8 +18,10 @@ import {
   ListAppmenu,
   UpdateAppmenuDto,
 } from './dto/appmenu.dto';
+import { AppconfigInterceptor } from '../appconfig/appconfig.interceptor';
 
 @Controller('api/appmenu')
+@UseInterceptors(AppconfigInterceptor)
 export class AppmenuController {
   constructor(private readonly appmenuService: AppmenuService) {}
 

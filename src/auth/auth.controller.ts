@@ -13,6 +13,7 @@ import { AuthJwtGuard } from './auth.decorator';
 import { RMessage } from '../response/response.interface';
 import { ResponseStatusCode } from '../response/response.decorator';
 import { AppconfigInterceptor } from '../appconfig/appconfig.interceptor';
+import { UserType } from '../hash/guard/user-type.decorator';
 
 @Controller('auth')
 @UseInterceptors(AppconfigInterceptor)
@@ -51,7 +52,9 @@ export class AuthController {
   }
 
   @AuthJwtGuard()
+  @UserType('owner')
   @Get('validate-token')
+  @ResponseStatusCode()
   async validateToken(@Headers('Authorization') token: string): Promise<any> {
     token = token.replace('Bearer ', '');
     const payload: Record<string, any> =

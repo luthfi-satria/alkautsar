@@ -73,6 +73,18 @@ export class JwtGuard extends AuthGuard('jwt') {
         ),
       );
     }
+    // console.log({
+    //   level: this.user_type_and_levels,
+    //   allType: loggedInUser.user_type + '.*',
+    //   StatusAllType: this.user_type_and_levels.includes(
+    //     loggedInUser.user_type + '.*',
+    //   ),
+    //   Spec: loggedInUser.user_type + '.' + loggedInUser.usergroup,
+    //   StatusAllSpec: this.user_type_and_levels.includes(
+    //     loggedInUser.user_type + '.' + loggedInUser.usergroup,
+    //   ),
+    // });
+
     if (
       this.user_type_and_levels &&
       !this.user_type_and_levels.includes(loggedInUser.user_type + '.*') &&
