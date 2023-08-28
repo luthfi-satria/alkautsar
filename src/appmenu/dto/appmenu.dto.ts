@@ -23,8 +23,8 @@ export class AppmenuDto {
   api_url: string;
 
   @IsNotEmpty()
-  @IsNumber()
-  sequence: number;
+  @IsString()
+  sequence: string;
 
   @IsOptional()
   @IsNumber()
@@ -54,8 +54,8 @@ export class UpdateAppmenuDto {
   api_url: string;
 
   @IsNotEmpty()
-  @IsNumber()
-  sequence: number;
+  @IsString()
+  sequence: string;
 
   @IsOptional()
   @ValidateIf((object) => (object.parent_id == null ? 0 : object.parent_id))

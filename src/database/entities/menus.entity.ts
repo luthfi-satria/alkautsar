@@ -22,7 +22,7 @@ export class AppmenusDocument {
   api_url?: string;
 
   @Column({ type: 'tinyint', default: 1 })
-  sequence?: number;
+  sequence?: string;
 
   @Column({ nullable: true })
   parent_id?: number;
