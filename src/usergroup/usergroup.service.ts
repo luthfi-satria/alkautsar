@@ -16,23 +16,51 @@ export class UsergroupService {
     private readonly responseService: ResponseService,
   ) {}
 
-  async getAll() {
+  async getAll(param) {
     try {
-      const findQuery = await this.usergroupRepo.find();
+      const limit = param.limit || 10;
+      const page = param.page || 1;
+      const skip = (page - 1) * limit;
 
-      const count = await this.usergroupRepo.count();
+      const query = this.usergroupRepo.createQueryBuilder('group');
+      const filter: any = [];
+      if (Object.keys(param).length > 0) {
+        for (const items in param) {
+          if (['limit', 'page', 'skip'].includes(items) == false) {
+            const filterVal =
+              items == 'is_default'
+                ? ['=', param[items]]
+                : ['LIKE', `'%${param[items]}%'`];
+            filter.push(`${items} ${filterVal[0]} ${filterVal[1]}`);
+          }
+        }
+
+        if (filter.length > 0) {
+          const queryFilter = filter.join(' AND ');
+          query.where(queryFilter);
+        }
+      }
+
+      const [findQuery, count] = await query
+        .skip(skip)
+        .take(limit)
+        .getManyAndCount();
+
       const results: RSuccessMessage = {
         success: true,
-        message: 'Get list group success',
+        message: 'Get List usergroup success',
         data: {
           total: count,
+          page: page,
+          skip: skip,
+          limit: limit,
           items: findQuery,
         },
       };
 
       return results;
     } catch (err) {
-      Logger.error(err.message, 'Fetch usergroup is failed');
+      Logger.error(err.message, 'Usergroup failed to fetch');
       throw err;
     }
   }
@@ -51,7 +79,7 @@ export class UsergroupService {
 
       if (isExists) {
         return this.responseService.error(
-          HttpStatus.CONFLICT,
+          HttpStatus.BAD_REQUEST,
           {
             value: body.name,
             property: 'name',

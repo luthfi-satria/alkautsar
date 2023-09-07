@@ -19,10 +19,6 @@ export class GetUserDetail {
   id: number;
 }
 export class CreateUsersDto {
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-
   @IsNotEmpty()
   @IsString()
   @ValidateIf((o) => o.email !== '')
@@ -51,10 +47,6 @@ export class CreateUsersDto {
 }
 
 export class UpdateUserDto {
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-
   @IsNotEmpty()
   @IsString()
   username: string;
@@ -74,10 +66,6 @@ export class UpdateUserDto {
 }
 
 export class ListUser {
-  @IsOptional()
-  @IsString()
-  name: string;
-
   @IsOptional()
   @IsString()
   email: string;

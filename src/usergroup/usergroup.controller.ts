@@ -7,8 +7,9 @@ import {
   Put,
   Delete,
   UseInterceptors,
+  Query,
 } from '@nestjs/common';
-import { GetUsergroupID, UsergroupDto } from './dto/usergroup.dto';
+import { GetUsergroupID, ListUsergroup, UsergroupDto } from './dto/usergroup.dto';
 import { UsergroupService } from './usergroup.service';
 import { ResponseStatusCode } from '../response/response.decorator';
 import { UserType } from '../hash/guard/user-type.decorator';
@@ -25,7 +26,7 @@ export class UsergroupController {
   @AuthJwtGuard()
   @ResponseStatusCode()
   async create(@Body() body: UsergroupDto) {
-    const result = this.usergroupService.create(body);
+    const result = await this.usergroupService.create(body);
     return result;
   }
 
@@ -33,8 +34,8 @@ export class UsergroupController {
   @UserType('owner')
   @AuthJwtGuard()
   @ResponseStatusCode()
-  async findAll() {
-    return await this.usergroupService.getAll();
+  async findAll(@Query() param: ListUsergroup) {
+    return await this.usergroupService.getAll(param);
   }
 
   @Get(':id')

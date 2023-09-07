@@ -25,13 +25,13 @@ export class UsergroupDocument {
   @Column()
   is_default?: boolean;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamp', select: false })
   created_at?: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamp', select: false })
   updated_at?: Date;
 
-  @DeleteDateColumn({ type: 'timestamp', nullable: true })
+  @DeleteDateColumn({ type: 'timestamp', nullable: true, select: false })
   deleted_at?: Date;
 
   @OneToMany(() => UserDocuments, (users) => users.usergroup)

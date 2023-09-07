@@ -21,6 +21,8 @@ import { AuthJwtGuard } from '../auth/auth.decorator';
 import { User } from '../auth/auth.decorator';
 import { ResponseService } from '../response/response.service';
 import { AppconfigInterceptor } from '../appconfig/appconfig.interceptor';
+import { updateProfileDto, updateRekomendasiDto } from './dto/profile.dto';
+import { UserPerekomendasiService } from './usersPerekomendasi.service';
 
 @Controller('api/user')
 @UseInterceptors(AppconfigInterceptor)
@@ -28,6 +30,7 @@ import { AppconfigInterceptor } from '../appconfig/appconfig.interceptor';
 export class UsersController {
   constructor(
     private readonly userService: UsersService,
+    private readonly rekomendasiService: UserPerekomendasiService,
     private readonly responseService: ResponseService,
   ) {}
 
@@ -71,7 +74,7 @@ export class UsersController {
   @UserType('owner', 'organisasi', 'public')
   @AuthJwtGuard()
   @ResponseStatusCode()
-  async updateProfile(@User() user: any, @Body() body: UpdateUserDto) {
+  async updateProfile(@User() user: any, @Body() body: updateProfileDto) {
     return await this.userService.update(user.id, body);
   }
 
@@ -80,6 +83,28 @@ export class UsersController {
   @AuthJwtGuard()
   @ResponseStatusCode()
   async update(@Param() param: GetUserDetail, @Body() body: UpdateUserDto) {
-    return await this.userService.update(param.id, body);
+    return await this.userService.updateUserLogin(param.id, body);
+  }
+
+  /**
+   * PEREKOMENDASI
+   */
+  @Get('perekomendasi')
+  @ResponseStatusCode()
+  @UserType('owner', 'organisasi', 'public')
+  @AuthJwtGuard()
+  async perekomendasi(@User() user: any) {
+    return await this.rekomendasiService.perekomendasi(user.id);
+  }
+
+  @Put('perekomendasi')
+  @ResponseStatusCode()
+  @UserType('owner', 'organisasi', 'public')
+  @AuthJwtGuard()
+  async updatePerekomendasi(
+    @User() user: any,
+    @Body() body: updateRekomendasiDto,
+  ) {
+    return await this.rekomendasiService.updatePerekomendasi(user.id, body);
   }
 }

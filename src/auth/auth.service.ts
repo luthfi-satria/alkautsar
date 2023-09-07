@@ -14,7 +14,9 @@ export class AuthService {
   ) {}
 
   async createAccessToken(email, password): Promise<string> {
-    const user = await this.userService.findOne({ email: email });
+    const user = await this.userService.findOne('profile.email = :email', {
+      email: email,
+    });
     let validate = false;
 
     if (!user) {
@@ -53,10 +55,11 @@ export class AuthService {
       const payload = {
         id: user.id,
         username: user.username,
-        email: user.email,
+        profile: user.profile,
         user_type: user.user_type,
         usergroup: user.usergroup_id,
       };
+
       return this.hashService.jwtSign(
         payload,
         `${process.env.AUTH_JWTEXPIRATIONTIME}`,

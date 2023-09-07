@@ -1,9 +1,13 @@
 {
-    "name":"administrator",
-    "email":"admin@mail.com",
-    "username":"admins",
-    "phone": "6285695551507",
-    "password":"admindemo",
-    "user_type": "owner",
-    "usergroup": "admin"
+    "login": {
+        "username":"admins",
+        "password":"admindemo",
+        "user_type": "owner",
+        "usergroup": "admin"
+    },
+    "profile": {
+        "name":"administrator",
+        "email":"admin@mail.com",
+        "phone": "6285695551507"
+    }
 }

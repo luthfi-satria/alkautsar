@@ -7,26 +7,34 @@ import { UserDocuments } from '../database/entities/users.entity';
 import { ResponseService } from '../response/response.service';
 import { UsergroupDocument } from '../database/entities/usergroup.entity';
 import { faker } from '@faker-js/faker';
-import { UserType } from '../hash/guard/interface/user.interface';
+import { Gender, UserType } from '../hash/guard/interface/user.interface';
 import { RSuccessMessage } from '../response/response.interface';
 import { join } from 'path';
 import * as fs from 'fs';
 import { Repository } from 'typeorm';
+import { UserProfileDocuments } from '../database/entities/profile.entities';
+import { updateProfileDto } from './dto/profile.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UserDocuments)
     private readonly usersRepo: Repository<UserDocuments>,
+    @InjectRepository(UserProfileDocuments)
+    private readonly profileRepo: Repository<UserProfileDocuments>,
     private readonly responseService: ResponseService,
     @InjectRepository(UsergroupDocument)
     private readonly groupRepo: Repository<UsergroupDocument>,
   ) {}
 
-  private readonly logger = new Logger(UsersService.name);
+  protected readonly logger = new Logger(UsersService.name);
 
-  async findOne(search: any) {
-    return await this.usersRepo.findOneBy(search);
+  async findOne(condition: string, search: any) {
+    return await this.usersRepo
+      .createQueryBuilder('users')
+      .leftJoinAndSelect('users.profile', 'profile')
+      .where(condition, search)
+      .getOne();
   }
 
   async getOne(search: any) {
@@ -35,7 +43,7 @@ export class UsersService {
 
   async register(data: CreateUsersDto) {
     try {
-      const isExists = await this.usersRepo.findOneBy({
+      const isExists = await this.profileRepo.findOneBy({
         email: data.email,
       });
 
@@ -45,13 +53,13 @@ export class UsersService {
           {
             value: data.email,
             property: 'email',
-            constraint: ['email already registered!'],
+            constraint: ['email sudah terdaftar!'],
           },
-          'User Already Exists',
+          'User sudah teregistrasi',
         );
       }
 
-      const isPhoneExists = await this.usersRepo.findOneBy({
+      const isPhoneExists = await this.profileRepo.findOneBy({
         phone: data.phone,
       });
 
@@ -61,9 +69,9 @@ export class UsersService {
           {
             value: data.phone,
             property: 'phone',
-            constraint: ['Phone number already registered!'],
+            constraint: ['Nomor telepon sudah terdaftar!'],
           },
-          'User Already Exists',
+          'User sudah teregistrasi',
         );
       }
 
@@ -81,20 +89,22 @@ export class UsersService {
           {
             value: data.usergroup,
             property: 'usergroup',
-            constraint: ['Usergroup is not found!'],
+            constraint: ['Usergroup tidak ditemukan!'],
           },
-          'Usergroup is not found',
+          'Usergroup tidak ditemukan',
         );
       }
       const newUser: Partial<UserDocuments> = {
-        name: data.name,
-        email: data.email,
         username: data.username,
-        phone: data.phone,
         user_type: data.user_type,
         usergroup_id: usergroup.id,
         password: password,
         token_reset_password: token,
+      };
+
+      const newProfile: Partial<UserProfileDocuments> = {
+        email: data.email,
+        phone: data.phone,
       };
 
       const result: Record<string, any> = await this.usersRepo
@@ -103,17 +113,20 @@ export class UsersService {
           Logger.error(e.message, '', 'Create User');
           throw e;
         })
-        .then((e) => {
+        .then(async (e) => {
           return e;
         });
 
+      if (result) {
+        await this.profileRepo.save({ ...newProfile, login_account: result });
+      }
       return this.responseService.success(
         true,
-        'Success Create new user!',
+        'Sukses membuat user baru!',
         result,
       );
     } catch (err) {
-      Logger.error(err.message, 'Create new User');
+      Logger.error(err.message, 'membuat user baru');
       throw err;
     }
   }
@@ -129,6 +142,7 @@ export class UsersService {
     try {
       const getProfile = await this.usersRepo
         .createQueryBuilder('users')
+        .leftJoinAndSelect('users.profile', 'profile')
         .leftJoinAndSelect('users.usergroup', 'usergroup')
         .where(`users.id = :id`, { id: id })
         .getOne();
@@ -142,15 +156,53 @@ export class UsersService {
       return this.responseService.error(HttpStatus.BAD_REQUEST, {
         value: id,
         property: 'id user',
-        constraint: ['user is not found'],
+        constraint: ['user tidak ditemukan'],
       });
     } catch (error) {
-      Logger.log(error.message, 'Fetching profile is failed');
+      Logger.log(error.message, 'Mengambil data profil gagal');
       throw error;
     }
   }
 
-  async update(id, body: Partial<UpdateUserDto>) {
+  async update(id, body: Partial<updateProfileDto>) {
+    try {
+      const verifyUser = await this.getOne({ id: id });
+      if (verifyUser) {
+        const updated = { ...body, user_id: id };
+        const saveUpdate = await this.profileRepo.save(updated);
+        if (saveUpdate) {
+          return this.responseService.success(
+            true,
+            'user profile telah diperbaharui!',
+          );
+        }
+        return this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: id,
+            property: 'user profile',
+            constraint: ['user profile gagal diperbaharui!'],
+          },
+          'user profile gagal diperbaharui!',
+        );
+      }
+
+      return this.responseService.error(
+        HttpStatus.BAD_REQUEST,
+        {
+          value: id,
+          property: 'user profile',
+          constraint: ['user profile tidak ditemukan!'],
+        },
+        'user profile tidak ditemukan',
+      );
+    } catch (error) {
+      Logger.log(error.message, 'pembaharuan profil tidak berhasil');
+      throw error;
+    }
+  }
+
+  async updateUserLogin(id, body: Partial<UpdateUserDto>) {
     try {
       const verifyUser = await this.getOne({ id: id });
       if (verifyUser) {
@@ -164,9 +216,9 @@ export class UsersService {
             {
               value: id,
               property: 'usergroup',
-              constraint: ['Usergroup is not found!'],
+              constraint: ['Usergroup tidak ditemukan!'],
             },
-            'Usergroup is not found',
+            'Usergroup tidak ditemukan',
           );
         }
 
@@ -178,17 +230,17 @@ export class UsersService {
         if (saveUpdate) {
           return this.responseService.success(
             true,
-            'user account has been updated!',
+            'akun user telah diperbaharui!',
           );
         }
         return this.responseService.error(
           HttpStatus.BAD_REQUEST,
           {
             value: id,
-            property: 'user account',
-            constraint: ['user account failed to update!'],
+            property: 'akun user',
+            constraint: ['akun user gagal diperbaharui!'],
           },
-          'user account failed to updated!',
+          'akun user gagal diperbaharui!',
         );
       }
 
@@ -196,13 +248,13 @@ export class UsersService {
         HttpStatus.BAD_REQUEST,
         {
           value: id,
-          property: 'user account',
-          constraint: ['user account is not found!'],
+          property: 'akun user',
+          constraint: ['akun user tidak ditemukan!'],
         },
-        'user account is not found',
+        'akun user tidak ditemukan',
       );
     } catch (error) {
-      Logger.log(error.message, 'update profile unsuccessfully');
+      Logger.log(error.message, 'pembaharuan profil tidak berhasil');
       throw error;
     }
   }
@@ -217,7 +269,7 @@ export class UsersService {
         .createQueryBuilder('user')
         .select([
           'user.id',
-          'user.name',
+          'profile.name',
           'user.username',
           'user.email',
           'user.phone',
@@ -226,6 +278,7 @@ export class UsersService {
           'user.verify_at',
           'user.created_at',
         ])
+        .leftJoinAndSelect('user.profile', 'profile')
         .leftJoinAndSelect('user.usergroup', 'group');
       const filter: any = [];
       if (Object.keys(param).length > 0) {
@@ -275,22 +328,29 @@ export class UsersService {
       const usergroup = await this.groupRepo.findOneBy({
         is_default: true,
       });
-
       for (let item = 0; item < total_user; item++) {
-        const profile: Partial<UserDocuments> = {
-          name: faker.person.fullName(),
-          email: faker.internet.email(),
+        const user: Partial<UserDocuments> = {
           username: faker.internet.userName(),
-          phone: faker.phone.number(),
           password: await this.generateHashPassword(faker.internet.password()),
           user_type: UserType.User,
           usergroup_id: usergroup?.id,
         };
+
+        const Ins = await this.usersRepo.save(user);
+
+        const profile: Partial<UserProfileDocuments> = {
+          name: faker.person.fullName(),
+          gender: Gender.Male,
+          email: faker.internet.email(),
+          phone: faker.phone.number(),
+          login_account: Ins,
+        };
+
         userData.push(profile);
       }
 
       if (userData.length > 0) {
-        const bulkIns = await this.usersRepo.save(userData);
+        const bulkIns = await this.profileRepo.save(userData);
         if (bulkIns) {
           return {
             code: HttpStatus.OK,
@@ -316,31 +376,41 @@ export class UsersService {
     );
     const data = JSON.parse(adminData);
     const token = randomUUID();
-    const password = await this.generateHashPassword(data.password);
+    const password = await this.generateHashPassword(data.login.password);
     // Get usergroup
     const usergroup = await this.groupRepo.findOneBy({
-      name: data.usergroup,
+      name: data.login.usergroup,
     });
 
     if (!usergroup) {
       return this.responseService.error(
         HttpStatus.BAD_REQUEST,
         {
-          value: data.usergroup,
+          value: data.login.usergroup,
           property: 'usergroup',
-          constraint: ['Usergroup is not found!'],
+          constraint: ['Usergroup tidak ditemukan!'],
         },
-        'Usergroup is not found',
+        'Usergroup tidak ditemukan',
       );
     }
     const newUser = {
-      ...data,
+      ...data.login,
       usergroup_id: usergroup.id,
       password: password,
       token_reset_password: token,
     };
 
     const replacement = await this.usersRepo.insert(newUser);
+    if (replacement) {
+      await this.profileRepo
+        .save({
+          ...data.profile,
+          user_id: replacement.identifiers[0].id,
+        })
+        .catch((err) => {
+          this.logger.log('ERROR ', err);
+        });
+    }
     return replacement;
   }
 }

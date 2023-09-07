@@ -23,6 +23,7 @@ export class SeedingDB {
     await this.usergroupService.seeding();
   }
 
+  // cli : npx nestjs-command seeding:admin
   @Command({
     command: 'seeding:admin',
     describe: 'seeding admin data',
@@ -32,6 +33,7 @@ export class SeedingDB {
     return createAdmin;
   }
 
+  // npx nestjs-command seeding:usergroup
   @Command({
     command: 'seeding:usergroup',
     describe: 'seeding usergroup',
@@ -41,6 +43,7 @@ export class SeedingDB {
     return seeds;
   }
 
+  // npx nestjs-command seeding:config
   @Command({
     command: 'seeding:config',
     describe: 'seeding application configuration',
