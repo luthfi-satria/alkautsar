@@ -2,7 +2,7 @@
     "login": {
         "username":"admins",
         "password":"admindemo",
-        "user_type": "owner",
+        "level": "owner",
         "usergroup": "admin"
     },
     "profile": {

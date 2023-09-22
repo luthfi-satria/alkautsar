@@ -5,15 +5,14 @@ import {
   Entity,
   JoinColumn,
   OneToOne,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 import { UserProfileDocuments } from './profile.entities';
 
-@Entity({ name: 'perekomendasi' })
-export class PerekomendasiDocument {
+@Entity({ name: 'investor' })
+export class InvestorDocuments {
   @PrimaryGeneratedColumn()
   user_id: number;
 
@@ -24,33 +23,29 @@ export class PerekomendasiDocument {
   @JoinColumn({ name: 'user_id' })
   profile: UserProfileDocuments;
 
-  @Column({ type: 'varchar', length: 200, nullable: true })
-  name?: string;
+  @Column({ type: 'float', default: 0 })
+  nilai?: number;
 
-  @Column({ type: 'varchar', length: 200, nullable: true })
-  perekomendasi?: string;
+  @Column()
+  jangka_waktu?: number;
 
-  @Column({ type: 'varchar', length: 50 })
-  relasi?: string;
+  @Column()
+  no_rekening?: string;
 
-  @Column({ type: 'varchar', length: 200, nullable: true })
-  alamat?: string;
+  @Column()
+  bank?: string;
 
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  kelurahan?: string;
+  @Column()
+  tanggal_investasi?: Date;
 
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  kecamatan?: string;
-
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  kota?: string;
+  @Column()
+  tanggal_kadaluarsa?: Date;
 
   @Column({
     type: 'timestamp',
     nullable: true,
-    select: false,
   })
-  verify_at?: Date | string;
+  verify_at?: Date | string | null;
 
   @CreateDateColumn({
     type: 'timestamp',
@@ -72,7 +67,7 @@ export class PerekomendasiDocument {
   })
   deleted_at?: Date | string;
 
-  constructor(init?: Partial<PerekomendasiDocument>) {
+  constructor(init?: Partial<InvestorDocuments>) {
     Object.assign(this, init);
   }
 }

@@ -1,0 +1,90 @@
+[
+    {
+        "id": 1,
+        "usergroup_id": 1,
+        "menu_id": 1,
+        "permissions": [
+            "CREATE", "READ","UPDATE","DELETE"
+        ]
+    },
+    {
+        "id": 2,
+        "usergroup_id": 1,
+        "menu_id": 2,
+        "permissions": [
+            "CREATE", "READ","UPDATE","DELETE"
+        ]
+    },
+    {
+        "id": 3,
+        "usergroup_id": 1,
+        "menu_id": 3,
+        "permissions": [
+            "CREATE", "READ","UPDATE","DELETE"
+        ]
+    },
+    {
+        "id": 4,
+        "usergroup_id": 1,
+        "menu_id": 4,
+        "permissions": [
+            "CREATE", "READ","UPDATE","DELETE"
+        ]
+    },
+    {
+        "id": 5,
+        "usergroup_id": 1,
+        "menu_id": 5,
+        "permissions": [
+            "CREATE", "READ","UPDATE","DELETE"
+        ]
+    },
+    {
+        "id": 6,
+        "usergroup_id": 1,
+        "menu_id": 6,
+        "permissions": [
+            "CREATE", "READ","UPDATE","DELETE"
+        ]
+    },
+    {
+        "id": 7,
+        "usergroup_id": 1,
+        "menu_id": 7,
+        "permissions": [
+            "CREATE", "READ","UPDATE","DELETE"
+        ]
+    },
+    {
+        "id": 8,
+        "usergroup_id": 1,
+        "menu_id": 8,
+        "permissions": [
+            "CREATE", "READ","UPDATE","DELETE"
+        ]
+    },
+    {
+        "id": 9,
+        "usergroup_id": 1,
+        "menu_id": 9,
+        "permissions": [
+            "CREATE", "READ","UPDATE","DELETE"
+        ]
+    },
+    {
+        "id": 10,
+        "usergroup_id": 1,
+        "menu_id": 10,
+        "permissions": [
+            "CREATE", "READ","UPDATE","DELETE"
+        ]
+    },
+    {
+        "id": 11,
+        "usergroup_id": 1,
+        "menu_id": 11,
+        "permissions": [
+            "CREATE", "READ","UPDATE","DELETE"
+        ]
+    },
+]

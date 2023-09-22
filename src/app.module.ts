@@ -15,6 +15,7 @@ import { SchedullerService } from './scheduller/scheduller.service';
 import { AppconfigModule } from './appconfig/appconfig.module';
 import { BullModule } from '@nestjs/bull';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { InvestorModule } from './investor/investor.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -37,6 +38,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     UsergroupAccessModule,
     AppmenuModule,
     AppconfigModule,
+    InvestorModule,
   ],
   controllers: [AppController],
   providers: [AppService, SeedingDB, SchedullerService],

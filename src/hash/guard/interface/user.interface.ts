@@ -8,7 +8,7 @@ export enum UserType {
 
 export interface User {
   id: string;
-  user_type: UserType;
+  level: UserType;
   usergroup: UsergroupDocument;
 }
 

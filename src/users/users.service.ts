@@ -1,4 +1,10 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUsersDto, ListUser, UpdateUserDto } from './dto/users.dto';
 import { randomUUID } from 'crypto';
@@ -7,13 +13,14 @@ import { UserDocuments } from '../database/entities/users.entity';
 import { ResponseService } from '../response/response.service';
 import { UsergroupDocument } from '../database/entities/usergroup.entity';
 import { faker } from '@faker-js/faker';
-import { Gender, UserType } from '../hash/guard/interface/user.interface';
+import { Gender } from '../hash/guard/interface/user.interface';
 import { RSuccessMessage } from '../response/response.interface';
 import { join } from 'path';
 import * as fs from 'fs';
 import { Repository } from 'typeorm';
 import { UserProfileDocuments } from '../database/entities/profile.entities';
 import { updateProfileDto } from './dto/profile.dto';
+import { DatetimeHelper } from '../helper/datetime.helper';
 
 @Injectable()
 export class UsersService {
@@ -33,6 +40,7 @@ export class UsersService {
     return await this.usersRepo
       .createQueryBuilder('users')
       .leftJoinAndSelect('users.profile', 'profile')
+      .leftJoinAndSelect('users.usergroup', 'usergroup')
       .where(condition, search)
       .getOne();
   }
@@ -49,7 +57,7 @@ export class UsersService {
 
       if (isExists) {
         return this.responseService.error(
-          HttpStatus.CONFLICT,
+          HttpStatus.BAD_REQUEST,
           {
             value: data.email,
             property: 'email',
@@ -80,14 +88,14 @@ export class UsersService {
 
       // Get usergroup
       const usergroup = await this.groupRepo.findOneBy({
-        name: data.usergroup,
+        id: Number(data.usergroup_id),
       });
 
       if (!usergroup) {
         return this.responseService.error(
           HttpStatus.BAD_REQUEST,
           {
-            value: data.usergroup,
+            value: data.usergroup_id,
             property: 'usergroup',
             constraint: ['Usergroup tidak ditemukan!'],
           },
@@ -96,7 +104,6 @@ export class UsersService {
       }
       const newUser: Partial<UserDocuments> = {
         username: data.username,
-        user_type: data.user_type,
         usergroup_id: usergroup.id,
         password: password,
         token_reset_password: token,
@@ -151,7 +158,7 @@ export class UsersService {
         ['password', 'token_reset_password'].forEach(
           (e) => delete getProfile[e],
         );
-        return this.responseService.success(true, 'user profile', getProfile);
+        return this.responseService.success(true, 'Akun user', getProfile);
       }
       return this.responseService.error(HttpStatus.BAD_REQUEST, {
         value: id,
@@ -168,22 +175,34 @@ export class UsersService {
     try {
       const verifyUser = await this.getOne({ id: id });
       if (verifyUser) {
-        const updated = { ...body, user_id: id };
-        const saveUpdate = await this.profileRepo.save(updated);
+        if (body.verify_at && body.verify_at == 'true') {
+          body.verify_at = DatetimeHelper.CurrentDateTime('ISO');
+        } else {
+          body.verify_at = null;
+        }
+        // const updated = { ...body, user_id: id };
+        // console.log('UPDATED', updated);
+        // const saveUpdate = await this.profileRepo.save(updated);
+        const saveUpdate = await this.profileRepo
+          .createQueryBuilder()
+          .update()
+          .set(body)
+          .where({ user_id: id })
+          .execute();
         if (saveUpdate) {
           return this.responseService.success(
             true,
-            'user profile telah diperbaharui!',
+            'Akun user telah diperbaharui!',
           );
         }
         return this.responseService.error(
           HttpStatus.BAD_REQUEST,
           {
             value: id,
-            property: 'user profile',
-            constraint: ['user profile gagal diperbaharui!'],
+            property: 'Akun user',
+            constraint: ['Akun user gagal diperbaharui!'],
           },
-          'user profile gagal diperbaharui!',
+          'Akun user gagal diperbaharui!',
         );
       }
 
@@ -191,10 +210,10 @@ export class UsersService {
         HttpStatus.BAD_REQUEST,
         {
           value: id,
-          property: 'user profile',
-          constraint: ['user profile tidak ditemukan!'],
+          property: 'Akun user',
+          constraint: ['Akun user tidak ditemukan!'],
         },
-        'user profile tidak ditemukan',
+        'Akun user tidak ditemukan',
       );
     } catch (error) {
       Logger.log(error.message, 'pembaharuan profil tidak berhasil');
@@ -204,11 +223,11 @@ export class UsersService {
 
   async updateUserLogin(id, body: Partial<UpdateUserDto>) {
     try {
-      const verifyUser = await this.getOne({ id: id });
+      const verifyUser = await this.usersRepo.findOneBy({ id: id });
       if (verifyUser) {
         // Get usergroup
         const usergroup = await this.groupRepo.findOneBy({
-          name: body.usergroup,
+          id: Number(body.usergroup_id),
         });
         if (!usergroup) {
           return this.responseService.error(
@@ -222,10 +241,14 @@ export class UsersService {
           );
         }
 
+        if (body.password && body.password != '') {
+          body.password = await this.generateHashPassword(body.password);
+        } else {
+          delete body.password;
+        }
         verifyUser.usergroup_id = usergroup.id;
-        delete body.usergroup;
         const updated = Object.assign(verifyUser, body);
-
+        delete updated?.usergroup;
         const saveUpdate = await this.usersRepo.update({ id: id }, updated);
         if (saveUpdate) {
           return this.responseService.success(
@@ -259,37 +282,59 @@ export class UsersService {
     }
   }
 
-  async listUser(param: ListUser) {
+  async listUser(param: ListUser, raw = false) {
     try {
       const limit = param.limit || 10;
       const page = param.page || 1;
       const skip = (page - 1) * limit;
 
-      const query = this.usersRepo
-        .createQueryBuilder('user')
-        .select([
-          'user.id',
-          'profile.name',
-          'user.username',
-          'user.email',
-          'user.phone',
-          'user.user_type',
-          'user.usergroup',
-          'user.verify_at',
-          'user.created_at',
-        ])
-        .leftJoinAndSelect('user.profile', 'profile')
-        .leftJoinAndSelect('user.usergroup', 'group');
+      const query = this.usersRepo.createQueryBuilder('user');
+      if (raw == false) {
+        query
+          .select([
+            'user.id',
+            'user.username',
+            'profile.name',
+            'profile.email',
+            'profile.phone',
+            'profile.gender',
+            'profile.verify_at',
+            'user.usergroup',
+            'user.created_at',
+            'group.name',
+            'group.level',
+          ])
+          .leftJoin('user.profile', 'profile')
+          .leftJoin('user.usergroup', 'group');
+      } else {
+        query
+          .leftJoinAndSelect('user.profile', 'profile')
+          .leftJoinAndSelect('user.usergroup', 'group');
+      }
+
       const filter: any = [];
+
       if (Object.keys(param).length > 0) {
         for (const items in param) {
-          if (['limit', 'page', 'skip'].includes(items) == false) {
+          if (
+            ['limit', 'page', 'skip', 'status'].includes(items) == false &&
+            param[items] != ''
+          ) {
             const filterVal =
               items == 'usergroup_id'
                 ? ['=', param[items]]
                 : ['LIKE', `'%${param[items]}%'`];
-            filter.push(`user.${items} ${filterVal[0]} ${filterVal[1]}`);
+            const flags = ['name', 'email', 'phone', 'gender'].includes(items)
+              ? 'profile'
+              : 'user';
+            filter.push(`${flags}.${items} ${filterVal[0]} ${filterVal[1]}`);
           }
+        }
+
+        if (param?.status && param?.status == 'baru') {
+          filter.push(`profile.verify_at IS NULL`);
+        } else if (param?.status && param?.status == 'lama') {
+          filter.push(`profile.verify_at IS NOT NULL`);
         }
 
         if (filter.length > 0) {
@@ -298,10 +343,17 @@ export class UsersService {
         }
       }
 
-      const [findQuery, count] = await query
-        .skip(skip)
-        .take(limit)
-        .getManyAndCount();
+      let findQuery = {};
+      let count = 0;
+      if (raw == false) {
+        [findQuery, count] = await query
+          .skip(skip)
+          .take(limit)
+          .getManyAndCount();
+      } else {
+        count = await query.getCount();
+        findQuery = await query.offset(skip).limit(limit).getRawMany();
+      }
 
       const results: RSuccessMessage = {
         success: true,
@@ -317,11 +369,98 @@ export class UsersService {
 
       return results;
     } catch (err) {
-      Logger.error(err.message, 'Users failed to fetch');
+      Logger.error(err.message, 'Users gagal ditampilkan');
       throw err;
     }
   }
 
+  /**
+   * UPLOAD FOTO
+   */
+
+  async uploadImage(id: string, file: any) {
+    try {
+      if (id && id != ':id') {
+        const path = file.path;
+        const newDestination = `./uploads/photos/${id}`;
+        const newImagePath = `${newDestination}/${file.filename}`;
+        const profileUser = await this.profileRepo.findOneBy({
+          user_id: Number(id),
+        });
+        if (profileUser) {
+          // HANDLE IMAGE => MOVING IMAGE FROM TEMP FOLDER TO SPESIFIC DIRECTORY
+          fs.readFile(path, function (err, data) {
+            if (!fs.existsSync(newDestination)) {
+              fs.mkdirSync(newDestination, { recursive: true });
+            }
+            fs.writeFile(newImagePath, data, function (err) {
+              fs.unlink(path, function () {
+                if (err) throw err;
+              });
+            });
+            if (err) {
+              throw err;
+            }
+          });
+
+          // HANDLE DATA => UPDATE USER PROFILE PHOTO
+          await this.profileRepo.save({
+            ...profileUser,
+            photo: file.filename,
+          });
+          return this.responseService.success(
+            true,
+            'Akun user telah diperbaharui!',
+            {
+              photo: file.filename,
+            },
+          );
+        } else {
+          fs.unlink(path, function (err) {
+            if (err) throw err;
+          });
+          return this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            {
+              value: id,
+              property: 'Akun user',
+              constraint: ['Akun user tidak ditemukan!'],
+            },
+            'Akun user tidak ditemukan',
+          );
+        }
+      }
+    } catch (err) {
+      fs.unlink(file.path, (error) => {
+        if (error) {
+          console.log('CATCH ERROR', error);
+        }
+      });
+      Logger.log(err.message, 'pembaharuan profil tidak berhasil');
+      throw err;
+    }
+  }
+
+  async readPhoto(id: string) {
+    try {
+      const getProfile = await this.profileRepo.findOneBy({
+        user_id: Number(id),
+      });
+      if (getProfile) {
+        return getProfile;
+      }
+      return {};
+    } catch (error) {
+      Logger.error('Terjadi galat pada sistem', error);
+      throw error;
+    }
+  }
+
+  /**
+   * SEEDING
+   * @param total_user
+   * @returns
+   */
   async seeding(total_user: number) {
     try {
       const userData: any = [];
@@ -332,7 +471,6 @@ export class UsersService {
         const user: Partial<UserDocuments> = {
           username: faker.internet.userName(),
           password: await this.generateHashPassword(faker.internet.password()),
-          user_type: UserType.User,
           usergroup_id: usergroup?.id,
         };
 
@@ -380,6 +518,7 @@ export class UsersService {
     // Get usergroup
     const usergroup = await this.groupRepo.findOneBy({
       name: data.login.usergroup,
+      level: data.login.level,
     });
 
     if (!usergroup) {
@@ -412,5 +551,96 @@ export class UsersService {
         });
     }
     return replacement;
+  }
+
+  /** REPORT */
+
+  async exportExcel(param: ListUser) {
+    try {
+      const users = await this.listUser(param, true);
+      const excelObjects = await this.createExcelObjects(users);
+      return excelObjects;
+
+      // return this.createExcelObjects(param, excelObjects);
+    } catch (error) {
+      this.logger.log(error);
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: ['Gagal mengunduh data user', error.message],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  async createExcelObjects(excelObjects) {
+    if (!excelObjects && !excelObjects.data) {
+      throw new NotFoundException('No data to download');
+    }
+
+    const rows = [
+      [
+        'No',
+        'Nama',
+        'Email',
+        'No. Handphone',
+        'KTP',
+        'Masa Berlaku',
+        'Tempat Lahir',
+        'Tanggal Lahir',
+        'Jenis Kelamin',
+        'Pendidikan',
+        'Status',
+        'Alamat',
+        'Kelurahan',
+        'Kecamatan',
+        'Kota',
+        'Status Kepemilikan',
+        'Verifikasi',
+        'Level',
+        'Group',
+      ],
+    ];
+
+    if (excelObjects.data.items) {
+      let i = 1;
+      for (const items of excelObjects.data.items) {
+        rows.push([
+          i,
+          items.profile_name ? items.profile_name : '',
+          items.profile_email ? items.profile_email : '',
+          items.profile_phone ? items.profile_phone : '',
+          items.profile_ktp ? items.profile_ktp : '',
+          items.profile_masa_berlaku ? items.profile_masa_berlaku : '',
+          items.profile_dob_place ? items.profile_dob_place : '',
+          items.profile_dob ? items.profile_dob : '',
+          items.profile_gender == 'male' ? 'Laki-laki' : 'Perempuan',
+          items.profile_education ? items.profile_education : '',
+          items.profile_marital_status ? items.profile_marital_status : '',
+          items.profile_alamat ? items.profile_alamat : '',
+          items.profile_kelurahan ? items.profile_kelurahan : '',
+          items.profile_kecamatan ? items.profile_kecamatan : '',
+          items.profile_kota ? items.profile_kota : '',
+          items.profile_status_kepemilikan
+            ? items.profile_status_kepemilikan
+            : '',
+          items.profile_verify_at ? 'Terverifikasi' : 'Belum verifikasi',
+          items.group_level ? items.group_level : '',
+          items.group_name ? items.group_name : '',
+        ]);
+        i++;
+      }
+    } else {
+      rows.push(['Tidak ada data yang dapat ditampilkan']);
+    }
+
+    return {
+      rows: rows,
+    };
   }
 }

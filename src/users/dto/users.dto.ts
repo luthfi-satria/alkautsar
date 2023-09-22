@@ -9,19 +9,19 @@ import {
   Min,
   ValidateIf,
 } from 'class-validator';
-import { UserType } from '../../hash/guard/interface/user.interface';
+import { Gender, UserType } from '../../hash/guard/interface/user.interface';
 import { Type } from 'class-transformer';
 import { number } from 'yargs';
 
 export class GetUserDetail {
   @IsNotEmpty()
   @Type(() => number)
-  id: number;
+  id: string;
 }
 export class CreateUsersDto {
   @IsNotEmpty()
   @IsString()
-  @ValidateIf((o) => o.email !== '')
+  // @ValidateIf((o) => o.email !== '')
   @IsEmail()
   email: string;
 
@@ -39,11 +39,7 @@ export class CreateUsersDto {
 
   @IsString()
   @IsNotEmpty()
-  user_type: UserType;
-
-  @IsString()
-  @IsNotEmpty()
-  usergroup: string;
+  usergroup_id: string;
 }
 
 export class UpdateUserDto {
@@ -51,21 +47,20 @@ export class UpdateUserDto {
   @IsString()
   username: string;
 
-  @IsNotEmpty({ message: 'Phone is required' })
-  @IsNumberString()
-  @Length(10, 15)
-  phone: string;
-
   @IsString()
   @IsNotEmpty()
-  user_type: UserType;
+  usergroup_id: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  usergroup: string;
+  password: string;
 }
 
 export class ListUser {
+  @IsOptional()
+  @IsString()
+  name: string;
+
   @IsOptional()
   @IsString()
   email: string;
@@ -85,6 +80,14 @@ export class ListUser {
   @IsOptional()
   @IsString()
   usergroup_id: string;
+
+  @IsOptional()
+  @IsString()
+  gender: Gender;
+
+  @IsOptional()
+  @IsString()
+  status: string;
 
   @IsOptional()
   @IsNumber()

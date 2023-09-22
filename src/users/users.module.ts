@@ -11,6 +11,8 @@ import { AppconfigModule } from '../appconfig/appconfig.module';
 import { UserProfileDocuments } from '../database/entities/profile.entities';
 import { PerekomendasiDocument } from '../database/entities/perekomendasi.entities';
 import { UserPerekomendasiService } from './usersPerekomendasi.service';
+import { UserPekerjaanService } from './usersPekerjaan.service';
+import { PekerjaanDocument } from '../database/entities/pekerjaan.entities';
 
 @Module({
   imports: [
@@ -19,6 +21,7 @@ import { UserPerekomendasiService } from './usersPerekomendasi.service';
       UserProfileDocuments,
       UsergroupDocument,
       PerekomendasiDocument,
+      PekerjaanDocument,
     ]),
     AppconfigModule,
   ],
@@ -26,6 +29,7 @@ import { UserPerekomendasiService } from './usersPerekomendasi.service';
   providers: [
     UsersService,
     UserPerekomendasiService,
+    UserPekerjaanService,
     ResponseService,
     MessageService,
     JwtService,

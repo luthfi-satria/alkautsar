@@ -5,7 +5,7 @@ import {
   Entity,
   JoinColumn,
   OneToOne,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import {
@@ -17,38 +17,35 @@ import { UserDocuments } from './users.entity';
 
 @Entity({ name: 'users_profile' })
 export class UserProfileDocuments {
-  @PrimaryColumn({ primary: true })
+  @PrimaryGeneratedColumn()
   user_id: number;
 
-  @OneToOne(() => UserDocuments, (login_account) => login_account.profile, {
-    onUpdate: 'CASCADE',
-    onDelete: 'CASCADE',
-  })
+  @OneToOne(() => UserDocuments)
   @JoinColumn({ name: 'user_id' })
   login_account: UserDocuments;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   name?: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 50, nullable: true })
   email?: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 50, nullable: true })
   phone?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   photo?: string;
 
-  @Column({ nullable: true, select: false })
+  @Column({ type: 'text', nullable: true, select: false })
   background_picture?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   ktp?: string;
 
   @Column({ type: 'date', nullable: true })
   masa_berlaku?: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   dob_place?: string;
 
   @Column({ type: 'date', nullable: true })
@@ -63,27 +60,26 @@ export class UserProfileDocuments {
   @Column({ type: 'enum', enum: MaritalStatus, default: MaritalStatus.SINGLE })
   marital_status?: MaritalStatus;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 200, nullable: true })
   alamat?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 200, nullable: true })
   kelurahan?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 200, nullable: true })
   kecamatan?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   kota?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   status_kepemilikan?: string;
 
   @Column({
     type: 'timestamp',
     nullable: true,
-    select: false,
   })
-  verify_at?: Date | string;
+  verify_at?: Date | string | null;
 
   @CreateDateColumn({
     type: 'timestamp',

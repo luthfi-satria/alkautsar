@@ -53,6 +53,7 @@ export class JwtGuard extends AuthGuard('jwt') {
       throw new InternalServerErrorException(err);
     }
     const loggedInUser: User = user;
+    // console.log('JWT GUARDS USER', loggedInUser);
     if (!loggedInUser) {
       let error_message = ['Invalid token'];
       if (info instanceof TokenExpiredError) {
@@ -73,7 +74,7 @@ export class JwtGuard extends AuthGuard('jwt') {
         ),
       );
     }
-    // console.log({
+    // console.log('AUTH CREDENTIAL', {
     //   level: this.user_type_and_levels,
     //   allType: loggedInUser.user_type + '.*',
     //   StatusAllType: this.user_type_and_levels.includes(
@@ -85,11 +86,12 @@ export class JwtGuard extends AuthGuard('jwt') {
     //   ),
     // });
 
+    // HARUS DIBENERIN DULU AKSES MENU NYA DISINI
     if (
       Object.keys(this.user_type_and_levels).length > 0 &&
-      !this.user_type_and_levels.includes(loggedInUser.user_type + '.*') &&
+      !this.user_type_and_levels.includes(loggedInUser.level + '.*') &&
       !this.user_type_and_levels.includes(
-        loggedInUser.user_type + '.' + loggedInUser.usergroup,
+        loggedInUser.level + '.' + loggedInUser.usergroup.name,
       )
     ) {
       logger.error('AuthJwtGuardError.Forbidden');

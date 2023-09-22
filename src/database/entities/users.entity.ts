@@ -9,7 +9,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { UserType } from '../../hash/guard/interface/user.interface';
 import { UsergroupDocument } from './usergroup.entity';
 import { UserProfileDocuments } from './profile.entities';
 
@@ -18,29 +17,23 @@ export class UserDocuments {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'varchar', length: 50 })
   username?: string;
 
-  @Column({ type: 'enum', enum: UserType, default: UserType.User })
-  user_type?: UserType;
-
-  @Column()
+  @Column({ type: 'int' })
   usergroup_id?: number;
 
   @ManyToOne(() => UsergroupDocument, (usergroup) => usergroup.users, {
     eager: true,
   })
   @JoinColumn({ name: 'usergroup_id' })
-  usergroup: UsergroupDocument;
+  usergroup?: UsergroupDocument;
 
-  @Column()
+  @Column({ type: 'varchar', length: 200 })
   password?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 200, nullable: true })
   token_reset_password: string;
-
-  @OneToOne(() => UserProfileDocuments, (profile) => profile.login_account)
-  profile?: UserProfileDocuments;
 
   @Column({
     type: 'timestamp',
@@ -68,6 +61,9 @@ export class UserDocuments {
     select: false,
   })
   deleted_at?: Date | string;
+
+  @OneToOne(() => UserProfileDocuments, (profile) => profile.login_account)
+  profile?: UserProfileDocuments;
 
   constructor(init?: Partial<UserDocuments>) {
     Object.assign(this, init);

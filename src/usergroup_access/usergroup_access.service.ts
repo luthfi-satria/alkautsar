@@ -44,6 +44,8 @@ export class UsergroupAccessService {
       }
 
       const [findQuery, count] = await query
+        .orderBy('appmenus.level', 'ASC')
+        .addOrderBy('appmenus.sequence', 'ASC')
         .skip(skip)
         .limit(limit)
         .getManyAndCount();
@@ -82,6 +84,8 @@ export class UsergroupAccessService {
           .leftJoinAndSelect('access_menu.usergroup', 'group')
           .leftJoinAndSelect('access_menu.menus', 'appmenu')
           .where('group.id = :group_id', { group_id: usergroup.id })
+          .orderBy('appmenu.level', 'ASC')
+          .addOrderBy('appmenu.sequence', 'ASC')
           .andWhere('appmenu.is_active = :isActive', { isActive: true })
           .getMany();
 

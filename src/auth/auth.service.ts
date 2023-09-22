@@ -55,9 +55,8 @@ export class AuthService {
       const payload = {
         id: user.id,
         username: user.username,
-        profile: user.profile,
-        user_type: user.user_type,
         usergroup: user.usergroup_id,
+        level: user?.usergroup?.level,
       };
 
       return this.hashService.jwtSign(

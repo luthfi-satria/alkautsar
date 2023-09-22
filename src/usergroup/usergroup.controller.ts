@@ -9,7 +9,11 @@ import {
   UseInterceptors,
   Query,
 } from '@nestjs/common';
-import { GetUsergroupID, ListUsergroup, UsergroupDto } from './dto/usergroup.dto';
+import {
+  GetUsergroupID,
+  ListUsergroup,
+  UsergroupDto,
+} from './dto/usergroup.dto';
 import { UsergroupService } from './usergroup.service';
 import { ResponseStatusCode } from '../response/response.decorator';
 import { UserType } from '../hash/guard/user-type.decorator';

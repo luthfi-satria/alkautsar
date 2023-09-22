@@ -1,4 +1,10 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import {
   Education,
   Gender,
@@ -65,6 +71,10 @@ export class updateProfileDto {
   @IsNotEmpty()
   @IsString()
   status_kepemilikan?: string;
+
+  @IsOptional()
+  @IsString()
+  verify_at?: string | undefined | null;
 }
 
 export class updateRekomendasiDto {
@@ -95,4 +105,38 @@ export class updateRekomendasiDto {
   @IsNotEmpty()
   @IsString()
   kota: string;
+}
+
+export class updatePekerjaanDto {
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  penghasilan: number;
+
+  @IsNotEmpty()
+  @IsString()
+  tipe_penghasilan: string;
+
+  @IsNotEmpty()
+  @IsString()
+  alamat: string;
+
+  @IsNotEmpty()
+  @IsString()
+  kelurahan: string;
+
+  @IsNotEmpty()
+  @IsString()
+  kecamatan: string;
+
+  @IsNotEmpty()
+  @IsString()
+  kota: string;
+
+  @IsOptional()
+  @IsNumber()
+  cicilan: number;
 }

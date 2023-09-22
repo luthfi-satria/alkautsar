@@ -5,15 +5,14 @@ import {
   Entity,
   JoinColumn,
   OneToOne,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 import { UserProfileDocuments } from './profile.entities';
 
-@Entity({ name: 'perekomendasi' })
-export class PerekomendasiDocument {
+@Entity({ name: 'pekerjaan' })
+export class PekerjaanDocument {
   @PrimaryGeneratedColumn()
   user_id: number;
 
@@ -24,14 +23,17 @@ export class PerekomendasiDocument {
   @JoinColumn({ name: 'user_id' })
   profile: UserProfileDocuments;
 
-  @Column({ type: 'varchar', length: 200, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   name?: string;
 
-  @Column({ type: 'varchar', length: 200, nullable: true })
-  perekomendasi?: string;
+  @Column({ type: 'float', default: 0 })
+  penghasilan?: number;
 
   @Column({ type: 'varchar', length: 50 })
-  relasi?: string;
+  tipe_penghasilan?: string;
+
+  @Column({ type: 'float', default: 0 })
+  cicilan?: number;
 
   @Column({ type: 'varchar', length: 200, nullable: true })
   alamat?: string;
@@ -72,7 +74,7 @@ export class PerekomendasiDocument {
   })
   deleted_at?: Date | string;
 
-  constructor(init?: Partial<PerekomendasiDocument>) {
+  constructor(init?: Partial<PekerjaanDocument>) {
     Object.assign(this, init);
   }
 }

@@ -14,4 +14,21 @@ export class DatetimeHelper {
     }
     return date;
   }
+
+  static setExpiredTime(
+    adjustYear,
+    adjustMonth = 0,
+    adjustDay = 0,
+    initialDate = '',
+  ) {
+    const now = new Date(initialDate);
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const day = now.getDate();
+    return new Date(
+      year + adjustYear,
+      month + adjustMonth,
+      day + adjustDay,
+    ).toISOString();
+  }
 }
