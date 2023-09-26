@@ -21,7 +21,7 @@ export class DatetimeHelper {
     adjustDay = 0,
     initialDate = '',
   ) {
-    const now = new Date(initialDate);
+    const now = initialDate ? new Date(initialDate) : new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
     const day = now.getDate();

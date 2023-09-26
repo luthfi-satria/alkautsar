@@ -1,7 +1,13 @@
-import { Injectable, HttpStatus, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  HttpStatus,
+  Logger,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InvestorDocuments } from '../database/entities/investor.entities';
-import { MoreThan, Repository } from 'typeorm';
+import { LessThanOrEqual, MoreThan, Repository } from 'typeorm';
 import { ResponseService } from '../response/response.service';
 import {
   CreateInvestorDto,
@@ -38,11 +44,12 @@ export class InvestorService {
             'inv.bank',
             'inv.tanggal_investasi',
             'inv.tanggal_kadaluarsa',
+            'inv.verify_at',
+            'inv.deleted_at',
             'profile.name',
             'profile.email',
             'profile.phone',
             'profile.gender',
-            'profile.verify_at',
           ])
           .leftJoin('inv.profile', 'profile');
       } else {
@@ -50,7 +57,6 @@ export class InvestorService {
       }
 
       const filter: any = [];
-
       if (Object.keys(param).length > 0) {
         for (const items in param) {
           if (
@@ -68,10 +74,10 @@ export class InvestorService {
           }
         }
 
-        if (param?.is_verified) {
-          filter.push(`profile.verify_at IS NOT NULL`);
-        } else {
-          filter.push(`profile.verify_at IS NULL`);
+        if (param?.is_verified == 'sudah') {
+          filter.push(`inv.verify_at IS NOT NULL`);
+        } else if (param?.is_verified == 'belum') {
+          filter.push(`inv.verify_at IS NULL`);
         }
 
         if (filter.length > 0) {
@@ -82,14 +88,20 @@ export class InvestorService {
 
       let findQuery = {};
       let count = 0;
+
       if (raw == false) {
         [findQuery, count] = await query
+          .withDeleted()
           .skip(skip)
           .take(limit)
           .getManyAndCount();
       } else {
         count = await query.getCount();
-        findQuery = await query.offset(skip).limit(limit).getRawMany();
+        findQuery = await query
+          .withDeleted()
+          .offset(skip)
+          .limit(limit)
+          .getRawMany();
       }
 
       const results: RSuccessMessage = {
@@ -116,7 +128,7 @@ export class InvestorService {
       const getProfile = await this.investorRepo
         .createQueryBuilder('inv')
         .leftJoinAndSelect('inv.profile', 'profile')
-        .where(`inv.id = :id`, { id: id })
+        .where(`inv.user_id = :id`, { id: id })
         .getOne();
 
       if (getProfile) {
@@ -151,8 +163,9 @@ export class InvestorService {
           'User sudah teregistrasi',
         );
       }
-
-      const invest: Partial<InvestorDocuments> = {
+      const isVerified = data?.is_verified;
+      delete data?.is_verified;
+      const invest = {
         ...data,
         tanggal_investasi: new Date(
           DatetimeHelper.CurrentDateTime('ISO').substring(0, 10),
@@ -160,6 +173,7 @@ export class InvestorService {
         tanggal_kadaluarsa: new Date(
           DatetimeHelper.setExpiredTime(data.jangka_waktu).substring(0, 10),
         ),
+        verify_at: isVerified ? new Date() : null,
       };
 
       const result = await this.investorRepo
@@ -178,7 +192,7 @@ export class InvestorService {
         result,
       );
     } catch (error) {
-      Logger.log('ERROR', error);
+      Logger.log('[ERROR] CREATE INVESTOR =>', error);
       throw error;
     }
   }
@@ -200,7 +214,7 @@ export class InvestorService {
               'profil tidak ditemukan, atau investasi telah kadaluarsa, silahkan lakukan aktivasi ulang!',
             ],
           },
-          'User sudah teregistrasi',
+          'status investor sudah kadaluarsa',
         );
       }
       const isVerified = data.is_verified;
@@ -221,9 +235,9 @@ export class InvestorService {
         );
       }
 
-      if (isVerified) {
-        invest.verify_at = DatetimeHelper.CurrentDateTime('ISO');
-      }
+      invest.verify_at = isVerified
+        ? DatetimeHelper.CurrentDateTime('ISO')
+        : null;
 
       const result = await this.investorRepo
         .save(invest)
@@ -241,16 +255,189 @@ export class InvestorService {
         result,
       );
     } catch (error) {
-      Logger.log('ERROR', error);
+      Logger.log('[ERROR] UPDATE INVESTOR =>', error);
       throw error;
     }
   }
 
   async DeleteInvestor(id: string) {
-    return id;
+    try {
+      const result = await this.investorRepo
+        .createQueryBuilder()
+        .softDelete()
+        .where('user_id = :id', { id: id })
+        .execute()
+        .catch((e) => {
+          Logger.error(e.message, '', '[ERROR] DELETE INVESTOR');
+          throw e;
+        })
+        .then(async (e) => {
+          return e;
+        });
+
+      return this.responseService.success(
+        true,
+        'Sukses menghapus investor data!',
+        result,
+      );
+    } catch (error) {
+      Logger.log('[ERROR] DELETE INVESTOR =>', error);
+      throw error;
+    }
   }
 
-  async ReactivateInvestor(id, data){
-    return data;
+  async RestoreInvestor(id: string) {
+    try {
+      const result = await this.investorRepo
+        .createQueryBuilder()
+        .restore()
+        .where('user_id = :id', { id: id })
+        .execute()
+        .catch((e) => {
+          Logger.error(e.message, '', '[ERROR] RESTORE INVESTOR');
+          throw e;
+        })
+        .then(async (e) => {
+          return e;
+        });
+
+      return this.responseService.success(
+        true,
+        'Sukses mengembalikan investor data!',
+        result,
+      );
+    } catch (error) {
+      Logger.log('[ERROR] RESTORE INVESTOR =>', error);
+      throw error;
+    }
+  }
+
+  async ReactivateInvestor(id) {
+    try {
+      const currentDate = DatetimeHelper.CurrentDateTime('ISO');
+      const findInvestor = await this.investorRepo.findOneBy({
+        user_id: id,
+        tanggal_kadaluarsa: LessThanOrEqual(currentDate),
+      });
+
+      if (!findInvestor) {
+        return this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: String(id),
+            property: 'investor id',
+            constraint: ['profil tidak ditemukan!'],
+          },
+          'profil tidak ditemukan',
+        );
+      }
+
+      const newExp = DatetimeHelper.setExpiredTime(
+        findInvestor.jangka_waktu,
+        0,
+        0,
+        currentDate,
+      );
+
+      const updateData = {
+        ...findInvestor,
+        tanggal_investasi: currentDate,
+        tanggal_kadaluarsa: newExp,
+      };
+
+      const result = await this.investorRepo
+        .save(updateData)
+        .catch((e) => {
+          Logger.error(e.message, '', 'Reaktivasi investor');
+          throw e;
+        })
+        .then(async (e) => {
+          return e;
+        });
+
+      return this.responseService.success(
+        true,
+        'Sukses reaktiVasi investor data!',
+        result,
+      );
+    } catch (error) {
+      Logger.log('[ERROR] REACTIVATE INVESTOR =>', error);
+      throw error;
+    }
+  }
+
+  /** REPORT */
+
+  async exportExcel(param: ListInvestorDto) {
+    try {
+      const users = await this.ListInvestor(param, true);
+      const excelObjects = await this.createExcelObjects(users);
+      return excelObjects;
+
+      // return this.createExcelObjects(param, excelObjects);
+    } catch (error) {
+      Logger.log('[ERROR] EXPORT EXCEL => ', error);
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: ['Gagal mengunduh data investor', error.message],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  async createExcelObjects(excelObjects) {
+    if (!excelObjects && !excelObjects.data) {
+      throw new NotFoundException('No data to download');
+    }
+
+    const rows = [
+      [
+        'No',
+        'Nama',
+        'Email',
+        'No. Handphone',
+        'Nilai',
+        'Jangka Waktu',
+        'Bank',
+        'No Rekening',
+        'Tanggal Investasi',
+        'Tanggal Kadaluarsa',
+        'Status Verifikasi',
+        'Status',
+      ],
+    ];
+
+    if (excelObjects.data.items) {
+      let i = 1;
+      for (const items of excelObjects.data.items) {
+        rows.push([
+          i,
+          items.profile_name ? items.profile_name : '',
+          items.profile_email ? items.profile_email : '',
+          items.profile_phone ? items.profile_phone : '',
+          items.inv_nilai ? items.inv_nilai : '',
+          items.inv_jangka_waktu ? items.inv_jangka_waktu : '',
+          items.inv_bank ? items.inv_bank : '',
+          items.inv_no_rekening ? items.inv_no_rekening : '',
+          items.inv_tanggal_investasi ? items.inv_tanggal_investasi : '',
+          items.inv_tanggal_kadaluarsa ? items.inv_tanggal_kadaluarsa : '',
+          items.inv_verify_at ? 'Terverifikasi' : 'Belum Verifikasi',
+          items.inv_deleted_at ? 'Aktif' : 'Tidak aktif',
+        ]);
+        i++;
+      }
+    } else {
+      rows.push(['Tidak ada data yang dapat ditampilkan']);
+    }
+
+    return {
+      rows: rows,
+    };
   }
 }

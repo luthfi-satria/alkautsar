@@ -74,7 +74,7 @@ export class updateProfileDto {
 
   @IsOptional()
   @IsString()
-  verify_at?: string | undefined | null;
+  verify_at?: string | null;
 }
 
 export class updateRekomendasiDto {

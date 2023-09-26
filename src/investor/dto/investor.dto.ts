@@ -31,10 +31,12 @@ export class ListInvestorDto {
 
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   nilai: number;
 
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   jangka_waktu: number;
 
   @IsOptional()
@@ -46,8 +48,8 @@ export class ListInvestorDto {
   tanggal_kadaluarsa: string;
 
   @IsOptional()
-  @IsBoolean()
-  is_verified: boolean;
+  @IsString()
+  is_verified: string;
 
   @IsOptional()
   @IsNumber()
@@ -91,7 +93,7 @@ export class CreateInvestorDto {
 
   @IsOptional()
   @IsBoolean()
-  is_verified: boolean;
+  is_verified?: boolean;
 }
 
 export class UpdateInvestorDto {

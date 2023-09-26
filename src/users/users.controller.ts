@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Res,
+  Logger,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
@@ -77,6 +78,32 @@ export class UsersController {
   @AuthJwtGuard()
   async detail(@Param() user: GetUserDetail) {
     return await this.userService.profile(user.id);
+  }
+
+  @Post('find_profile')
+  @ResponseStatusCode()
+  @UserType('owner')
+  @AuthJwtGuard()
+  async findProfile(@Body() body: any) {
+    try {
+      const profile = await this.userService
+        .findOne('profile.phone = :phone_numb', {
+          phone_numb: body.phone,
+        })
+        .catch((error) => {
+          console.log(error);
+          throw error;
+        });
+
+      if (profile && Object.keys(profile).length > 0) {
+        delete profile?.password;
+        delete profile?.token_reset_password;
+      }
+      return this.responseService.success(true, 'Data akun', profile || {});
+    } catch (error) {
+      Logger.log(error);
+      return error;
+    }
   }
 
   @Get('profile')
@@ -218,7 +245,7 @@ export class UsersController {
       const excelObjects = await this.userService.exportExcel(param);
 
       const workbook = new ExcelJS.Workbook();
-      workbook.creator = 'Alkautsar';
+      workbook.creator = 'PT. Laju Investama';
 
       // add worksheet
       const mySheet = workbook.addWorksheet('Data user', {

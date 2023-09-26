@@ -33,7 +33,7 @@ export class UserDocuments {
   password?: string;
 
   @Column({ type: 'varchar', length: 200, nullable: true })
-  token_reset_password: string;
+  token_reset_password?: string;
 
   @Column({
     type: 'timestamp',

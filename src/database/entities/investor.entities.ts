@@ -35,11 +35,17 @@ export class InvestorDocuments {
   @Column()
   bank?: string;
 
-  @Column()
-  tanggal_investasi?: Date;
+  @Column({
+    type: 'timestamp',
+    nullable: true,
+  })
+  tanggal_investasi?: Date | string | null;
 
-  @Column()
-  tanggal_kadaluarsa?: Date;
+  @Column({
+    type: 'timestamp',
+    nullable: true,
+  })
+  tanggal_kadaluarsa?: Date | string | null;
 
   @Column({
     type: 'timestamp',

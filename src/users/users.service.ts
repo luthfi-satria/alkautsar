@@ -180,7 +180,7 @@ export class UsersService {
         } else {
           body.verify_at = null;
         }
-        // const updated = { ...body, user_id: id };
+        // const updated = { ...body, verify_at: body?.verify_at || '' };
         // console.log('UPDATED', updated);
         // const saveUpdate = await this.profileRepo.save(updated);
         const saveUpdate = await this.profileRepo
@@ -478,9 +478,17 @@ export class UsersService {
 
         const profile: Partial<UserProfileDocuments> = {
           name: faker.person.fullName(),
-          gender: Gender.Male,
+          gender: Gender[faker.person.sex()] || Gender.Male,
+          alamat: faker.location.streetAddress(),
+          kelurahan: faker.location.street(),
+          kecamatan: faker.location.county(),
+          kota: faker.location.city(),
           email: faker.internet.email(),
           phone: faker.phone.number(),
+          dob_place: faker.location.city(),
+          dob: faker.date.birthdate(),
+          ktp: String(faker.number.int()),
+          masa_berlaku: faker.date.future(),
           login_account: Ins,
         };
 
