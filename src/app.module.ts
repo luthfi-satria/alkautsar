@@ -16,6 +16,8 @@ import { AppconfigModule } from './appconfig/appconfig.module';
 import { BullModule } from '@nestjs/bull';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { InvestorModule } from './investor/investor.module';
+import { CategoryModule } from './categories/categories.module';
+import { ProductModule } from './product/product.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -39,6 +41,8 @@ import { InvestorModule } from './investor/investor.module';
     AppmenuModule,
     AppconfigModule,
     InvestorModule,
+    CategoryModule,
+    ProductModule,
   ],
   controllers: [AppController],
   providers: [AppService, SeedingDB, SchedullerService],
