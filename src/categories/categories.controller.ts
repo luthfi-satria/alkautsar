@@ -32,8 +32,8 @@ export class CategoryController {
 
   @Get('')
   @ResponseStatusCode()
-  @UserType()
-  @AuthJwtGuard()
+  // @UserType()
+  // @AuthJwtGuard()
   async ListCategory(@Query() query: ListCategoryDto) {
     return await this.categoryService.ListCategory(query);
   }

@@ -42,8 +42,6 @@ export class ProductController {
 
   @Get('')
   @ResponseStatusCode()
-  @UserType()
-  @AuthJwtGuard()
   async ListProduct(@Query() query: ListProductDto) {
     return await this.productService.ListProduct(query);
   }

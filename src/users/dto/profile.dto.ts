@@ -1,5 +1,6 @@
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -45,7 +46,7 @@ export class updateProfileDto {
   gender?: Gender;
 
   @IsNotEmpty()
-  @IsString()
+  @IsEnum(Education)
   education?: Education;
 
   @IsNotEmpty()

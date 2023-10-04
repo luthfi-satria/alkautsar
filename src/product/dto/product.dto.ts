@@ -22,8 +22,13 @@ export class ListProductDto {
 
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
-  category_id?: number;
+  @IsNumber(
+    {},
+    {
+      each: true,
+    },
+  )
+  category_id?: number[] | number;
 
   @IsOptional()
   @IsString()
@@ -32,6 +37,16 @@ export class ListProductDto {
   @IsOptional()
   @IsString()
   stock_status: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  harga_min: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  harga_max: number;
 
   @IsOptional()
   @IsNumber()
@@ -50,6 +65,14 @@ export class ListProductDto {
   @Type(() => Number)
   @Min(1)
   page: number;
+
+  @IsOptional()
+  @IsString()
+  order_by: string;
+
+  @IsOptional()
+  @IsString()
+  orientation: string;
 }
 
 export class CreateProductDto {

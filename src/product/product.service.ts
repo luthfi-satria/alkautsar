@@ -44,17 +44,44 @@ export class ProductService {
               'page',
               'skip',
               'includeDeleted',
+              'status',
               'stock_status',
+              'harga_min',
+              'harga_max',
+              'order_by',
+              'orientation',
             ].includes(items) == false &&
             param[items] != ''
           ) {
             const filterVal =
               items == 'category_id'
-                ? ['=', param[items]]
+                ? ['IN', `(${param[items]})`]
                 : ['LIKE', `'%${param[items]}%'`];
             const flags = 'produk';
             filter.push(`${flags}.${items} ${filterVal[0]} ${filterVal[1]}`);
           }
+        }
+
+        if (param?.status && param?.status == 'publish') {
+          filter.push(`produk.status = '1'`);
+        } else if (param?.status && param?.status == 'draft') {
+          filter.push(`produk.status = '0'`);
+        }
+
+        const minHarga = param?.harga_min || 0;
+        const maxHarga = param?.harga_max || false;
+        if (maxHarga) {
+          filter.push(
+            `(produk.harga_jual BETWEEN ${minHarga} AND ${maxHarga})`,
+          );
+        } else if (minHarga) {
+          filter.push(`produk.harga_jual >= ${minHarga}`);
+        }
+
+        if (param?.stock_status && param?.stock_status == 'habis') {
+          filter.push(`produk.stok <= produk.min_stok`);
+        } else if (param?.stock_status && param?.stock_status == 'tersedia') {
+          filter.push(`produk.stok > produk.min_stok`);
         }
 
         if (filter.length > 0) {
@@ -63,17 +90,19 @@ export class ProductService {
         }
       }
 
-      if (param?.stock_status && param?.stock_status == 'habis') {
-        filter.push(`produk.stok <= produk.min_stok`);
-      } else if (param?.status && param?.status == 'tersedia') {
-        filter.push(`produk.stok > produk.min_stok`);
-      }
-
       let findQuery = {};
       let count = 0;
 
       if (param?.includeDeleted && param?.includeDeleted == 'true') {
         query.withDeleted();
+      }
+
+      const orientation =
+        param?.orientation && param?.orientation.toLowerCase() == 'asc'
+          ? 'ASC'
+          : 'DESC';
+      if (param?.order_by && param.order_by != '') {
+        query.orderBy('produk.' + param.order_by, orientation);
       }
 
       if (raw == false) {
