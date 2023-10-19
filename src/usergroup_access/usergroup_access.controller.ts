@@ -27,7 +27,7 @@ export class UsergroupAccessController {
 
   @Get()
   @ResponseStatusCode()
-  @UserType('owner', 'staff')
+  @UserType('owner', 'organisasi')
   @AuthJwtGuard()
   async getAllAccess(@Body() body: ListAccessmenu) {
     return await this.accessService.getAll(body);
@@ -35,7 +35,7 @@ export class UsergroupAccessController {
 
   @Get('/user')
   @ResponseStatusCode()
-  @UserType('owner', 'staff')
+  @UserType('owner', 'organisasi')
   @AuthJwtGuard()
   async getAccess(@User() user) {
     return await this.accessService.getAccess(user);
@@ -43,7 +43,7 @@ export class UsergroupAccessController {
 
   @Post()
   @ResponseStatusCode()
-  @UserType('owner', 'staff')
+  @UserType('owner', 'organisasi')
   @AuthJwtGuard()
   async create(@Body() body: UsergroupAccessDto) {
     return await this.accessService.create(body);
@@ -51,7 +51,7 @@ export class UsergroupAccessController {
 
   @Put(':id')
   @ResponseStatusCode()
-  @UserType('owner', 'staff')
+  @UserType('owner', 'organisasi')
   @AuthJwtGuard()
   async update(
     @Param() param: GetUsergroupAccessID,
@@ -62,7 +62,7 @@ export class UsergroupAccessController {
 
   @Delete(':id')
   @ResponseStatusCode()
-  @UserType('owner', 'staff')
+  @UserType('owner', 'organisasi')
   @AuthJwtGuard()
   async delete(@Param() param: GetUsergroupAccessID) {
     return await this.accessService.delete(param.id);

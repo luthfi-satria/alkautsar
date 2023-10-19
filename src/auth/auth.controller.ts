@@ -13,7 +13,6 @@ import { AuthJwtGuard } from './auth.decorator';
 import { RMessage } from '../response/response.interface';
 import { ResponseStatusCode } from '../response/response.decorator';
 import { AppconfigInterceptor } from '../appconfig/appconfig.interceptor';
-import { UserType } from '../hash/guard/user-type.decorator';
 
 @Controller('auth')
 @UseInterceptors(AppconfigInterceptor)
@@ -71,7 +70,12 @@ export class AuthController {
       );
     }
     return this.responseService.success(true, 'token is valid', {
-      payload: payload,
+      payload: {
+        // id: payload?.id,
+        username: payload?.username,
+        level: payload?.level,
+        photo: payload?.image ? `${payload.id}/photo/${payload.image}` : '',
+      },
     });
   }
 }

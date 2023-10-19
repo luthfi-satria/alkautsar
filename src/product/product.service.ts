@@ -299,6 +299,102 @@ export class ProductService {
     }
   }
 
+  async DeductStock(productArray: any) {
+    try {
+      Logger.log('[INFO] TRYING TO DEDUCT STOCK, data =>', productArray);
+      if (productArray && productArray.length > 0) {
+        const productIds = productArray.map((items) => items?.id);
+        const product = await this.productRepo
+          .createQueryBuilder()
+          .where(`id IN (:...ids)`, { ids: productIds })
+          .getMany();
+        if (product) {
+          const updateData: any = [];
+          for (const item of product) {
+            const productIdx = productArray.filter(
+              (list) => list.id == item.id,
+            );
+
+            updateData.push({
+              id: item.id,
+              stok: item.stok - productIdx[0].qty,
+            });
+          }
+
+          if (updateData.length > 0) {
+            await this.productRepo.save(updateData);
+          }
+
+          return this.responseService.success(
+            true,
+            'Stok produk telah diperbaharui',
+          );
+        }
+
+        return this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: productIds,
+            property: 'Id produk',
+            constraint: ['Id produk tidak ditemukan!'],
+          },
+          'Id produk tidak ditemukan',
+        );
+      }
+      return {
+        code: HttpStatus.BAD_REQUEST,
+        message: 'Invalid request data',
+        param: productArray,
+      };
+    } catch (error) {
+      Logger.log(error);
+      throw error;
+    }
+  }
+
+  async ReturningStock(orderProduct: any) {
+    try {
+      const listProducts: Record<string, any> = {
+        listID: [],
+        ObjectProduct: {},
+      };
+      for (const items of orderProduct) {
+        listProducts.listID.push(items.product_id);
+        listProducts.ObjectProduct[items.product_id] = items.qty;
+      }
+
+      if (listProducts.listID.length > 0) {
+        const getListProduct = await this.productRepo
+          .createQueryBuilder()
+          .where(`id IN (:...product_list)`, {
+            product_list: listProducts.listID,
+          })
+          .getMany();
+
+        if (getListProduct) {
+          const updateData: Partial<ProductDocuments>[] = [];
+          for (const items of getListProduct) {
+            updateData.push({
+              id: items.id,
+              stok: items.stok + listProducts.ObjectProduct[items.id],
+            });
+          }
+
+          if (updateData.length > 0) {
+            await this.productRepo.save(updateData).catch((error) => {
+              throw error;
+            });
+          }
+          return updateData;
+        }
+      }
+      return [];
+    } catch (error) {
+      Logger.log('[ERROR] RETURNING STOCK', error);
+      throw error;
+    }
+  }
+
   /**
    * UPLOAD FOTO
    */

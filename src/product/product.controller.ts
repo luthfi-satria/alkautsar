@@ -89,6 +89,22 @@ export class ProductController {
     return await this.productService.RestoreProduct(param.id);
   }
 
+  @Post('stock/deduct')
+  @ResponseStatusCode()
+  @UserType()
+  @AuthJwtGuard()
+  async DeductStok(@Body() body: any) {
+    return await this.productService.DeductStock(body);
+  }
+
+  @Post('stock/return')
+  @ResponseStatusCode()
+  @UserType()
+  @AuthJwtGuard()
+  async ReturningStock(@Body() body: any) {
+    return await this.productService.ReturningStock(body);
+  }
+
   @Post('image/:id')
   @UseInterceptors(
     FileInterceptor('image', {
@@ -112,28 +128,31 @@ export class ProductController {
     return await this.productService.uploadImage(param.id, file);
   }
 
-  @Get('image/:id/:name')
+  @Get(':id/image/:name')
   @ResponseStatusCode()
   async readFoto(
     @Param('id') id: string,
     @Param('name') name: string,
     @Res() res,
   ) {
-    const product: Partial<ProductDocuments> =
-      await this.productService.readPhoto(id);
-    if (product) {
-      const file_path = `uploads/products/${product.id}/${product.image}`;
+    if (name) {
+      const file_path = `uploads/products/${id}/${name}`;
       if (fs.existsSync(`./${file_path}`)) {
         const file = fs.createReadStream(join(process.cwd(), file_path));
         res.set({
           'Content-Type': mimeType.lookup(file_path),
-          'Content-Disposition': `attachment; filename="${product.image}"`,
+          'Content-Disposition': `attachment; filename="${name}"`,
         });
-        file.pipe(res);
+        file.pipe(res, {
+          end: true,
+        });
       }
     }
     // return not found;
-    return product;
+    return {
+      success: false,
+      message: 'image not found',
+    };
   }
 
   /** REPORTS */

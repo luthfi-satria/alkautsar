@@ -57,6 +57,7 @@ export class AuthService {
         username: user.username,
         usergroup: user.usergroup_id,
         level: user?.usergroup?.level,
+        image: user?.profile?.photo,
       };
 
       return this.hashService.jwtSign(

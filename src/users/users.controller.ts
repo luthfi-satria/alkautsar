@@ -108,7 +108,7 @@ export class UsersController {
 
   @Get('profile')
   @ResponseStatusCode()
-  @UserTypeAndLevel('owner.*', 'organisasi.*', 'public.*')
+  @UserType('owner', 'organisasi', 'public')
   @AuthJwtGuard()
   async profile(@User() user: any) {
     return await this.userService.profile(user.id);
@@ -168,7 +168,7 @@ export class UsersController {
     return await this.userService.uploadImage(param.id, file);
   }
 
-  @Get('photo/:id/:name')
+  @Get(':id/photo/:name')
   // @UserTypeAndLevel('owner.*', 'organisasi.*', 'public.*')
   // @AuthJwtGuard()
   @ResponseStatusCode()
@@ -177,21 +177,22 @@ export class UsersController {
     @Param('name') name: string,
     @Res() res,
   ) {
-    const profile: Partial<UserProfileDocuments> =
-      await this.userService.readPhoto(id);
-    if (profile) {
-      const file_path = `uploads/photos/${profile.user_id}/${profile.photo}`;
+    if (name) {
+      const file_path = `uploads/photos/${id}/${name}`;
       if (fs.existsSync(`./${file_path}`)) {
         const file = fs.createReadStream(join(process.cwd(), file_path));
         res.set({
           'Content-Type': mimeType.lookup(file_path),
-          'Content-Disposition': `attachment; filename="${profile.photo}"`,
+          'Content-Disposition': `attachment; filename="${name}"`,
         });
         file.pipe(res);
       }
     }
     // return not found;
-    return profile;
+    return {
+      success: false,
+      message: 'Image not found',
+    };
   }
 
   /**

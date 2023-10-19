@@ -18,6 +18,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { InvestorModule } from './investor/investor.module';
 import { CategoryModule } from './categories/categories.module';
 import { ProductModule } from './product/product.module';
+import { CartModule } from './cart/cart.module';
+import { OrderModule } from './order/order.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -43,6 +45,8 @@ import { ProductModule } from './product/product.module';
     InvestorModule,
     CategoryModule,
     ProductModule,
+    CartModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [AppService, SeedingDB, SchedullerService],
