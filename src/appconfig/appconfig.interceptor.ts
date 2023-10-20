@@ -18,7 +18,7 @@ export class AppconfigInterceptor implements NestInterceptor {
   ): Promise<Observable<any>> {
     const appconfData = await this.appconfigService.appconfigJobs();
 
-    if (appconfData && appconfData?.value.maintenance == true) {
+    if (appconfData && appconfData?.value?.maintenance == true) {
       throw new ForbiddenException({
         code: HttpStatus.FORBIDDEN,
         message: 'API is under maintenance',

@@ -6,6 +6,8 @@ import { RSuccessMessage } from '../response/response.interface';
 import { ListAccessmenu } from './dto/usergroup_access.dto';
 import { UsergroupService } from '../usergroup/usergroup.service';
 import { Repository } from 'typeorm';
+import * as fs from 'fs';
+import { join } from 'path';
 
 @Injectable()
 export class UsergroupAccessService {
@@ -224,6 +226,42 @@ export class UsergroupAccessService {
     } catch (err) {
       Logger.log(err.message, 'Delete Access menu');
       throw err;
+    }
+  }
+
+  async seeding() {
+    try {
+      const accessData = fs.readFileSync(
+        join(process.cwd(), 'src/database/seeds/data/menu_access.data.json'),
+        'utf-8',
+      );
+
+      const parseData: Partial<AccessDocument> = JSON.parse(accessData);
+      let replacement: any;
+      if (parseData) {
+        for (const items in parseData) {
+          const query = { id: parseData[items]['id'] };
+          const isExist = await this.accessRepo.findOneBy(query);
+          if (!isExist) {
+            replacement = await this.accessRepo.insert(parseData[items]);
+          }
+        }
+      }
+
+      if (!replacement) {
+        return {
+          code: HttpStatus.BAD_REQUEST,
+          message: 'Menu access seeding process is error',
+        };
+      }
+
+      return {
+        code: HttpStatus.OK,
+        message: 'Menu access seeding has been completed',
+      };
+    } catch (error) {
+      Logger.log(error.message, 'Seeding data is aborting, file is not exists');
+      throw error;
     }
   }
 }

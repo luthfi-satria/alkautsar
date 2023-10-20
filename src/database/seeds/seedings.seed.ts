@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { AppmenuService } from '../../appmenu/appmenu.service';
 import { UsersService } from '../../users/users.service';
 import { AppconfigService } from '../../appconfig/appconfig.service';
+import { UsergroupAccessService } from '../../usergroup_access/usergroup_access.service';
 
 @Injectable()
 export class SeedingDB {
@@ -12,6 +13,7 @@ export class SeedingDB {
     private readonly appmenuService: AppmenuService,
     private readonly userService: UsersService,
     private readonly appconfigService: AppconfigService,
+    private readonly accessService: UsergroupAccessService,
   ) {}
 
   @Command({
@@ -21,6 +23,8 @@ export class SeedingDB {
   async initialization() {
     await this.appconfigService.seeding();
     await this.usergroupService.seeding();
+    await this.userService.createAdmin();
+    await this.appconfigService.seeding();
   }
 
   // cli : npx nestjs-command seeding:admin
@@ -53,12 +57,23 @@ export class SeedingDB {
     return seeds;
   }
 
+  // npx nestjs-command seeding:appmenu
   @Command({
     command: 'seeding:appmenu',
     describe: 'seeding appmenu',
   })
   async createMenu() {
     const seeds = await this.appmenuService.seeding();
+    return seeds;
+  }
+
+  // npx nestjs-command seeding:menu_access
+  @Command({
+    command: 'seeding:menu_access',
+    describe: 'seeding menu_access',
+  })
+  async seedMenuAccess() {
+    const seeds = await this.accessService.seeding();
     return seeds;
   }
 

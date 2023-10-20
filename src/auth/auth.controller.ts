@@ -14,7 +14,7 @@ import { RMessage } from '../response/response.interface';
 import { ResponseStatusCode } from '../response/response.decorator';
 import { AppconfigInterceptor } from '../appconfig/appconfig.interceptor';
 
-@Controller('auth')
+@Controller('api/auth')
 @UseInterceptors(AppconfigInterceptor)
 export class AuthController {
   constructor(
@@ -48,6 +48,13 @@ export class AuthController {
     return this.responseService.success(true, 'Token successfully generated!', {
       token: dailytoken,
     });
+  }
+
+  @Get()
+  async test() {
+    return {
+      test: 'test',
+    };
   }
 
   @AuthJwtGuard()
