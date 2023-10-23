@@ -36,11 +36,11 @@ services:
     container_name: lajuApp
     image: react-app:1.0.0
     build:
-      context: ./../alkautsar-fe
-      dockerfile: ./../alkautsar-fe/Dockerfile
+      context: ./../laju_investama
+      dockerfile: ./../laju_investama/Dockerfile
     volumes:
-      - ./../alkautsar-fe/src:/app/src
-    env_file: ./../alkautsar-fe/.env
+      - ./../laju_investama/src:/app/src
+    env_file: ./../laju_investama/.env
     ports:
       - '5173:5173'
     depends_on:
