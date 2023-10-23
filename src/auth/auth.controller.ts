@@ -12,10 +12,10 @@ import { ResponseService } from '../response/response.service';
 import { AuthJwtGuard } from './auth.decorator';
 import { RMessage } from '../response/response.interface';
 import { ResponseStatusCode } from '../response/response.decorator';
-import { AppconfigInterceptor } from '../appconfig/appconfig.interceptor';
+// import { AppconfigInterceptor } from '../appconfig/appconfig.interceptor';
 
 @Controller('api/auth')
-@UseInterceptors(AppconfigInterceptor)
+// @UseInterceptors(AppconfigInterceptor)
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
