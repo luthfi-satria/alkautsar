@@ -86,10 +86,16 @@ export class UsersService {
       const token = randomUUID();
       const password = await this.generateHashPassword(data.password);
 
+      let groupWhere = {};
+
+      if (data?.usergroup_id) {
+        groupWhere = { id: Number(data?.usergroup_id) };
+      } else {
+        groupWhere = { is_default: true };
+      }
+
       // Get usergroup
-      const usergroup = await this.groupRepo.findOneBy({
-        id: Number(data.usergroup_id),
-      });
+      const usergroup = await this.groupRepo.findOneBy(groupWhere);
 
       if (!usergroup) {
         return this.responseService.error(

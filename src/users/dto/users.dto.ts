@@ -38,7 +38,7 @@ export class CreateUsersDto {
   password: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   usergroup_id: string;
 }
 
