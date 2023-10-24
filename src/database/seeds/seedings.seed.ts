@@ -77,6 +77,8 @@ export class SeedingDB {
     return seeds;
   }
 
+  // npx nestjs-command seeding:users 20
+
   @Command({
     command: 'seeding:users <amount>',
     describe: 'seeding users',
