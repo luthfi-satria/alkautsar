@@ -20,6 +20,7 @@ import { CategoryModule } from './categories/categories.module';
 import { ProductModule } from './product/product.module';
 import { CartModule } from './cart/cart.module';
 import { OrderModule } from './order/order.module';
+import { KreditModule } from './kredit/kredit.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -47,6 +48,7 @@ import { OrderModule } from './order/order.module';
     ProductModule,
     CartModule,
     OrderModule,
+    KreditModule,
   ],
   controllers: [AppController],
   providers: [AppService, SeedingDB, SchedullerService],

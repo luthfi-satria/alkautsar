@@ -14,6 +14,8 @@ import {
   MaritalStatus,
 } from '../../hash/guard/interface/user.interface';
 import { UserDocuments } from './users.entity';
+import { PekerjaanDocument } from './pekerjaan.entities';
+import { PerekomendasiDocument } from './perekomendasi.entities';
 
 @Entity({ name: 'users_profile' })
 export class UserProfileDocuments {
@@ -100,6 +102,12 @@ export class UserProfileDocuments {
     select: false,
   })
   deleted_at?: Date | string;
+
+  @OneToOne(() => PekerjaanDocument, (pekerjaan) => pekerjaan.profile)
+  pekerjaan?: PekerjaanDocument;
+
+  @OneToOne(() => PerekomendasiDocument, (rekomendasi) => rekomendasi.profile)
+  rekomendasi?: PerekomendasiDocument;
 
   constructor(init?: Partial<UserProfileDocuments>) {
     Object.assign(this, init);

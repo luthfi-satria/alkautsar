@@ -5,7 +5,6 @@ import {
   Entity,
   JoinColumn,
   OneToOne,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -21,7 +20,7 @@ export class PerekomendasiDocument {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'user_id', referencedColumnName: 'user_id' })
   profile: UserProfileDocuments;
 
   @Column({ type: 'varchar', length: 200, nullable: true })

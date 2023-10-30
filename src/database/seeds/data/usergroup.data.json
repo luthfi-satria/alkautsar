@@ -7,7 +7,7 @@
     },
     {
         "id": 2,
-        "name": "staff",
+        "name": "pengelola",
         "level": "owner",
         "is_default": false
     },
@@ -20,6 +20,18 @@
     {
         "id": 4,
         "name": "investor",
+        "level": "organisasi",
+        "is_default": false
+    },
+    {
+        "id": 5,
+        "name": "staff",
+        "level": "owner",
+        "is_default": false
+    },
+    {
+        "id": 6,
+        "name": "guru",
         "level": "organisasi",
         "is_default": false
     }

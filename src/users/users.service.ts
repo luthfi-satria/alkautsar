@@ -45,6 +45,15 @@ export class UsersService {
       .getOne();
   }
 
+  async findCompleteProfile(condition: string, search: any) {
+    return await this.profileRepo
+      .createQueryBuilder('profile')
+      .leftJoinAndSelect('profile.pekerjaan', 'pekerjaan')
+      .leftJoinAndSelect('profile.rekomendasi', 'rekomendasi')
+      .where(condition, search)
+      .getOne();
+  }
+
   async getOne(search: any) {
     return await this.usersRepo.findOneBy(search);
   }

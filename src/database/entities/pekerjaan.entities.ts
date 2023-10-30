@@ -20,7 +20,7 @@ export class PekerjaanDocument {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'user_id', referencedColumnName: 'user_id' })
   profile: UserProfileDocuments;
 
   @Column({ type: 'varchar', length: 50, nullable: true })

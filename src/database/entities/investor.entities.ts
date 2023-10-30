@@ -23,6 +23,9 @@ export class InvestorDocuments {
   @JoinColumn({ name: 'user_id' })
   profile: UserProfileDocuments;
 
+  @Column({ type: 'varchar', length: '15' })
+  no_investasi: string;
+
   @Column({ type: 'float', default: 0 })
   nilai?: number;
 

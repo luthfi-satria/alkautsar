@@ -106,6 +106,28 @@ export class UsersController {
     }
   }
 
+  @Post('find_profile/complete')
+  @ResponseStatusCode()
+  @UserType('owner')
+  @AuthJwtGuard()
+  async findCompleteProfile(@Body() body: any) {
+    try {
+      const profile = await this.userService
+        .findCompleteProfile('profile.phone = :phone_numb', {
+          phone_numb: body.phone,
+        })
+        .catch((error) => {
+          console.log(error);
+          throw error;
+        });
+
+      return this.responseService.success(true, 'Data akun', profile || {});
+    } catch (error) {
+      Logger.log(error);
+      return error;
+    }
+  }
+
   @Get('profile')
   @ResponseStatusCode()
   @UserType('owner', 'organisasi', 'public')

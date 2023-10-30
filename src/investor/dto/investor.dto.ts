@@ -76,6 +76,10 @@ export class CreateInvestorDto {
   user_id: number;
 
   @IsNotEmpty()
+  @IsString()
+  no_investasi: string;
+
+  @IsNotEmpty()
   @IsNumber()
   nilai: number;
 
@@ -97,6 +101,10 @@ export class CreateInvestorDto {
 }
 
 export class UpdateInvestorDto {
+  @IsNotEmpty()
+  @IsString()
+  no_investasi: string;
+
   @IsNotEmpty()
   @IsNumber()
   nilai?: number;

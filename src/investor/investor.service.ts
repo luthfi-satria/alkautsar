@@ -167,6 +167,7 @@ export class InvestorService {
       delete data?.is_verified;
       const invest = {
         ...data,
+        no_investasi: data?.no_investasi,
         tanggal_investasi: new Date(
           DatetimeHelper.CurrentDateTime('ISO').substring(0, 10),
         ),
@@ -402,6 +403,7 @@ export class InvestorService {
         'Nama',
         'Email',
         'No. Handphone',
+        'No Investasi',
         'Nilai',
         'Jangka Waktu',
         'Bank',
@@ -421,6 +423,7 @@ export class InvestorService {
           items.profile_name ? items.profile_name : '',
           items.profile_email ? items.profile_email : '',
           items.profile_phone ? items.profile_phone : '',
+          items.no_investasi ? items.no_investasi : '',
           items.inv_nilai ? items.inv_nilai : '',
           items.inv_jangka_waktu ? items.inv_jangka_waktu : '',
           items.inv_bank ? items.inv_bank : '',
