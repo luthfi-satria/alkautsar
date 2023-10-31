@@ -25,7 +25,12 @@ import { join } from 'path';
 import * as mimeType from 'mime-types';
 import ExcelJS from 'exceljs';
 import { KreditService } from './kredit.service';
-import { CreateKredit, KreditListDto, UpdateKredit } from './dto/kredit.dto';
+import {
+  ChangeStatusDto,
+  CreateKredit,
+  KreditListDto,
+  UpdateKredit,
+} from './dto/kredit.dto';
 
 @Controller('api/kredit')
 @UseInterceptors(AppconfigInterceptor)
@@ -86,6 +91,41 @@ export class KreditController {
     return await this.kreditService.CreateKredit(user, body, files);
   }
 
+  @Put(':kredit_code')
+  @ResponseStatusCode()
+  @UserType('owner')
+  @AuthJwtGuard()
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'fc_ktp', maxCount: 1 },
+        { name: 'fc_kk', maxCount: 1 },
+        { name: 'slip_gaji', maxCount: 1 },
+        { name: 'rek_koran', maxCount: 1 },
+        { name: 'surat_pernyataan', maxCount: 1 },
+        { name: 'down_payment', maxCount: 1 },
+      ],
+      {
+        storage: diskStorage({
+          destination: './uploads/temp',
+          filename: editFileName,
+        }),
+        limits: {
+          fileSize: 5242880,
+        },
+        fileFilter: imageFileFilter,
+      },
+    ),
+  )
+  async UpdateKredit(
+    @User() user: any,
+    @Param('kredit_code') code: string,
+    @Body() body: CreateKredit,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    return await this.kreditService.UpdateKredit(user, code, body, files);
+  }
+
   @Get(':kredit_code/support/:image')
   @ResponseStatusCode()
   async readFoto(
@@ -125,11 +165,11 @@ export class KreditController {
     }
   }
 
-  @Put('')
+  @Put(':kredit_code/status')
   @ResponseStatusCode()
   @UserType()
   @AuthJwtGuard()
-  async ChangeStatus(@User() user: any, @Body() body: UpdateKredit) {
+  async ChangeStatus(@User() user: any, @Body() body: ChangeStatusDto) {
     return await this.kreditService.ChangeStatus(user, body);
   }
 

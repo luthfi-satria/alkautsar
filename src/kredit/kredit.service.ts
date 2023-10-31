@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { ResponseService } from '../response/response.service';
 import { RMessage, RSuccessMessage } from '../response/response.interface';
 import { randomUUID } from 'crypto';
@@ -17,6 +17,7 @@ import { KreditSupportDocument } from './entities/kredit_support.entities';
 import { CreateKredit, KreditListDto } from './dto/kredit.dto';
 import { StatusKredit } from './interface/kredit_status.interface';
 import { UsersService } from '../users/users.service';
+import { join } from 'path';
 
 @Injectable()
 export class KreditService {
@@ -50,6 +51,17 @@ export class KreditService {
 
       if (param?.jenis_pembiayaan) {
         where = { ...where, jenis_pembiayaan: param.jenis_pembiayaan };
+      }
+
+      if (param?.tanggal_pengajuan) {
+        const tglPengajuan = param?.tanggal_pengajuan.split(':');
+        where = {
+          ...where,
+          tanggal_pengajuan: Between(
+            tglPengajuan[0] + ' 00:00:00',
+            tglPengajuan[1] + ' 23:59:59',
+          ),
+        };
       }
 
       if (param?.profile_phone) {
@@ -162,12 +174,16 @@ export class KreditService {
           tenor: Number(param?.tenor),
           dp: Number(param?.dp),
           cicilan: Number(param?.cicilan),
+          tanggal_akad: new Date(param?.tanggal_akad),
+          tanggal_jatuh_tempo: Number(param?.tanggal_jatuh_tempo),
+          notes: param?.notes,
         };
 
         Logger.log('KREDIT DATA', kreditData);
         const processingImg = await this.ImageProcessing(
           kreditData.kredit_code,
           files,
+          {},
         );
 
         const docSupport: Partial<KreditSupportDocument> = {
@@ -214,9 +230,98 @@ export class KreditService {
     }
   }
 
+  async UpdateKredit(
+    user: any,
+    kredit_code: string,
+    param: CreateKredit,
+    files: any,
+  ): Promise<any> {
+    try {
+      const getKredit = await this.kreditRepo.findOneBy({
+        kredit_code: kredit_code,
+      });
+
+      if (getKredit) {
+        const kreditData: Partial<KreditDocument> = {
+          ...getKredit,
+          jenis_pembiayaan: param?.jenis_pembiayaan,
+          nama_produk: param?.nama_produk,
+          jenis_produk: param?.jenis_produk,
+          tipe_produk: param?.tipe_produk,
+          ukuran_produk: param?.ukuran_produk,
+          warna_produk: param?.warna_produk,
+          tanggal_akad: new Date(param?.tanggal_akad),
+          tanggal_jatuh_tempo: Number(param?.tanggal_jatuh_tempo),
+          harga_produk: Number(param?.harga_produk),
+          spesifikasi: param?.spesifikasi,
+          tenor: Number(param?.tenor),
+          dp: Number(param?.dp),
+          cicilan: Number(param?.cicilan),
+          notes: param?.notes,
+        };
+
+        const kreditDoc = await this.kreditSuppRepo.findOneBy({
+          kredit_code: kredit_code,
+        });
+
+        Logger.log('KREDIT DATA', {
+          kredit: kreditData,
+          document: kreditDoc,
+        });
+        const processingImg = await this.ImageProcessing(
+          kreditData.kredit_code,
+          files,
+          kreditDoc,
+        );
+
+        const docSupport: Partial<KreditSupportDocument> = {
+          ...kreditDoc,
+          ...processingImg,
+        };
+
+        const doSave = await this.kreditRepo
+          .save(kreditData)
+          .then(async (result) => {
+            const docSave = await this.kreditSuppRepo
+              .save(docSupport)
+              .catch((err) => {
+                throw err;
+              });
+            return {
+              kreditInfo: result,
+              documents: docSave,
+            };
+          })
+          .catch((err) => {
+            throw err;
+          });
+
+        return this.responseService.success(
+          true,
+          'Kredit telah dibuat',
+          doSave,
+        );
+      }
+      const response: RMessage = {
+        constraint: ['profile', 'pekerjaan', 'rekomendasi'],
+        property: 'form tidak lengkap',
+        value: 'lengkapi dahulu profilnya',
+      };
+      return this.responseService.error(HttpStatus.BAD_REQUEST, response);
+    } catch (error) {
+      Logger.log('[ERROR] CREATE KREDIT => ', error);
+      return this.responseService.error(
+        HttpStatus.BAD_REQUEST,
+        error,
+        'Terjadi kesalahan pada server dalam mengolah data',
+      );
+    }
+  }
+
   async ImageProcessing(
     kredit_code: any,
     files: any[],
+    kreditDocData: any,
   ): Promise<Record<string, string>> {
     try {
       const newDestination = `./uploads/kredit`;
@@ -231,6 +336,18 @@ export class KreditService {
           const path = files[items][0]?.path;
           const imgPath = newImagePath + '/' + files[items][0]?.filename;
           result[items] = files[items][0]?.filename;
+
+          if (kreditDocData?.[items] && kreditDocData?.[items] != '') {
+            const oldFilePath = newImagePath + '/' + kreditDocData?.[items];
+            if (fs.existsSync(oldFilePath)) {
+              fs.unlink(join(process.cwd(), oldFilePath), function (error) {
+                if (error) {
+                  throw error;
+                }
+              });
+            }
+          }
+
           fs.readFile(path, function (err, data) {
             fs.writeFile(imgPath, data, function (err) {
               if (err) {
@@ -274,6 +391,10 @@ export class KreditService {
           kreditData.status = StatusKredit.approved;
           kreditData.tanggal_approval = new Date();
           kreditData.approver_id = user.id;
+        }
+
+        if (param?.status === StatusKredit.ongoing) {
+          kreditData.status = StatusKredit.ongoing;
         }
 
         if (param?.status === StatusKredit.reject) {

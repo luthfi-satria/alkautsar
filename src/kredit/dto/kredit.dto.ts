@@ -118,7 +118,11 @@ export class CreateKredit {
 
   @IsOptional()
   @IsString()
-  tgl_jatuh_tempo: string;
+  tanggal_akad: string;
+
+  @IsOptional()
+  @IsString()
+  tanggal_jatuh_tempo: string;
 
   @IsOptional()
   @IsString()
@@ -150,6 +154,16 @@ export class CreateKredit {
 }
 
 export class UpdateKredit {
+  @IsNotEmpty()
+  @IsString()
+  kredit_code: string;
+
+  @IsNotEmpty()
+  @IsEnum(StatusKredit)
+  status: StatusKredit;
+}
+
+export class ChangeStatusDto {
   @IsNotEmpty()
   @IsString()
   kredit_code: string;
