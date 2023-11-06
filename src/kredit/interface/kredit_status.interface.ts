@@ -14,3 +14,9 @@ export enum StatusKredit {
   // menunggak / NPL  NON PERFORMING LOAN
   non_perform = 'Menunggak',
 }
+
+export enum KreditPaymentMethod {
+  TRANSFER = 'TRANSFER',
+  CASH = 'TUNAI',
+  DEDUCTION = 'POTONG GAJI',
+}

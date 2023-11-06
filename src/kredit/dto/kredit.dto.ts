@@ -8,7 +8,10 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { StatusKredit } from '../interface/kredit_status.interface';
+import {
+  KreditPaymentMethod,
+  StatusKredit,
+} from '../interface/kredit_status.interface';
 
 export class KreditListDto {
   @IsOptional()
@@ -171,4 +174,98 @@ export class ChangeStatusDto {
   @IsNotEmpty()
   @IsEnum(StatusKredit)
   status: StatusKredit;
+}
+
+export class BayarKreditDto {
+  @IsNotEmpty()
+  @IsString()
+  kredit_code: string;
+
+  @IsNotEmpty()
+  @IsString()
+  jml_bayar: string;
+
+  @IsNotEmpty()
+  @IsEnum(KreditPaymentMethod)
+  payment_method: KreditPaymentMethod;
+
+  @IsOptional()
+  @IsString()
+  bank_name: string;
+
+  @IsOptional()
+  @IsString()
+  nomor_rekening: string;
+
+  @IsOptional()
+  @IsString()
+  pemilik_rekening: string;
+
+  @IsOptional()
+  @IsString()
+  rekening_tujuan: string;
+
+  @IsOptional()
+  @IsString()
+  no_referensi: string;
+
+  @IsNotEmpty()
+  @IsString()
+  payment_date: string;
+
+  @IsOptional()
+  @IsString()
+  bukti_payment: string;
+}
+
+export class KreditHistoryListDto {
+  @IsOptional()
+  @IsString()
+  kredit_code: string;
+
+  @IsOptional()
+  @IsString()
+  profile_name: string;
+
+  @IsOptional()
+  @IsString()
+  profile_phone: string;
+
+  @IsOptional()
+  @IsString()
+  payment_method: string;
+
+  @IsOptional()
+  @IsString()
+  payment_date: string;
+
+  @IsOptional()
+  @IsString()
+  verify_at: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  @Min(0)
+  skip: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1)
+  limit: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1)
+  page: number;
+
+  @IsOptional()
+  @IsString()
+  order_by: string;
+
+  @IsOptional()
+  @IsString()
+  orientation: string;
 }

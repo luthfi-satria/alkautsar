@@ -666,4 +666,31 @@ export class UsersService {
       rows: rows,
     };
   }
+
+  /**
+   * STATISTIC
+   */
+
+  async Statistics() {
+    try {
+      const total = await this.usersRepo.createQueryBuilder().getCount();
+
+      const Stats = await this.usersRepo
+        .createQueryBuilder()
+        .select([
+          'COUNT(id) AS total',
+          `DATE_FORMAT(created_at, '%M-%Y') AS period`,
+        ])
+        .where(`created_at >= NOW() - INTERVAL 2 MONTH`)
+        .groupBy(`DATE_FORMAT(created_at, '%Y-%m')`)
+        .getRawMany();
+
+      return {
+        total: total,
+        stats: Stats,
+      };
+    } catch (error) {
+      return error;
+    }
+  }
 }

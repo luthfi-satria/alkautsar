@@ -538,4 +538,45 @@ export class OrderService {
     }
     return result;
   }
+
+  /**
+   * STATISTIC
+   */
+
+  async Statistics() {
+    try {
+      const total = await this.orderRepo
+        .createQueryBuilder()
+        .where({ status: StatusOrder.success })
+        .andWhere('created_at >= NOW() - INTERVAL 7 DAY')
+        .getCount();
+
+      const stats = await this.orderRepo
+        .createQueryBuilder()
+        .select(['COUNT(id) AS total_in_week', `status`])
+        .where('created_at >= NOW() - INTERVAL 7 DAY')
+        .groupBy(`status`)
+        .getRawMany();
+
+      const income = await this.orderRepo
+        .createQueryBuilder()
+        .select([
+          'SUM(grand_total) AS monthly_income',
+          `DATE_FORMAT(payment_date,'%Y-%M') AS periode`,
+        ])
+        .where('payment_date IS NOT NULL')
+        .andWhere('verified_at IS NOT NULL')
+        .andWhere('canceled_at IS NULL')
+        .andWhere(`DATE_FORMAT(payment_date,'%Y') = YEAR(NOW())`)
+        .groupBy(`DATE_FORMAT(payment_date, '%Y-%m')`)
+        .getRawMany();
+      return {
+        total: total,
+        stats: stats,
+        income: income,
+      };
+    } catch (error) {
+      return error;
+    }
+  }
 }

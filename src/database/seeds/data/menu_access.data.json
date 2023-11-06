@@ -86,5 +86,13 @@
         "permissions": [
             "CREATE", "READ","UPDATE","DELETE"
         ]
+    },
+    {
+        "id": 12,
+        "usergroup_id": 1,
+        "menu_id": 12,
+        "permissions": [
+            "CREATE", "READ","UPDATE","DELETE"
+        ]
     }
 ]

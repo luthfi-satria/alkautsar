@@ -108,5 +108,15 @@
         "parent_id": null,
         "level": 0,
         "is_active": true
+    },
+    {
+        "id": 12,
+        "name": "history_kredit",
+        "label": "history pembayaran kredit",
+        "api_url": "/dashboard/kredit_history",
+        "sequence": 11,
+        "parent_id": 10,
+        "level": 1,
+        "is_active": true
     }
 ]

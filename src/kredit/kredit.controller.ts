@@ -7,9 +7,7 @@ import {
   Param,
   Query,
   Body,
-  UploadedFile,
   Res,
-  BadRequestException,
   UploadedFiles,
 } from '@nestjs/common';
 import { AppconfigInterceptor } from '../appconfig/appconfig.interceptor';
@@ -26,10 +24,10 @@ import * as mimeType from 'mime-types';
 import ExcelJS from 'exceljs';
 import { KreditService } from './kredit.service';
 import {
+  BayarKreditDto,
   ChangeStatusDto,
   CreateKredit,
   KreditListDto,
-  UpdateKredit,
 } from './dto/kredit.dto';
 
 @Controller('api/kredit')
@@ -173,6 +171,31 @@ export class KreditController {
     return await this.kreditService.ChangeStatus(user, body);
   }
 
+  /** PEMBAYARAN */
+  @Post('payment')
+  @UserType('owner')
+  @AuthJwtGuard()
+  @ResponseStatusCode()
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'bukti_payment', maxCount: 1 }], {
+      storage: diskStorage({
+        destination: './uploads/temp',
+        filename: editFileName,
+      }),
+      limits: {
+        fileSize: 5242880,
+      },
+      fileFilter: imageFileFilter,
+    }),
+  )
+  async BayarKredit(
+    @User() user: any,
+    @Body() body: BayarKreditDto,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    return await this.kreditService.BayarKredit(user, body, files);
+  }
+
   /** REPORTS */
   @Get('print/report')
   @AuthJwtGuard()
@@ -206,7 +229,7 @@ export class KreditController {
         wrapText: true,
       };
 
-      const fileName = `data_order.xlsx`;
+      const fileName = `data_pengajuan_kredit.xlsx`;
 
       res.set({
         'Content-Type':

@@ -163,6 +163,23 @@ export class InvestorService {
           'User sudah teregistrasi',
         );
       }
+
+      const getInvestor = await this.investorRepo.findOneBy({
+        user_id: data.user_id,
+      });
+
+      if (getInvestor) {
+        return this.responseService.error(
+          HttpStatus.NOT_ACCEPTABLE,
+          {
+            constraint: ['user id'],
+            property: 'user_id',
+            value: String(data.user_id),
+          },
+          'User tersebut telah terdaftar sebagai investor',
+        );
+      }
+
       const isVerified = data?.is_verified;
       delete data?.is_verified;
       const invest = {
@@ -442,5 +459,39 @@ export class InvestorService {
     return {
       rows: rows,
     };
+  }
+
+  /**
+   * STATISTIC
+   */
+
+  async Statistics() {
+    try {
+      // const stats = await this.investorRepo
+      //   .createQueryBuilder()
+      //   .select([
+      //     'COUNT(user_id) AS total',
+      //     `DATE_FORMAT(created_at, '%M-%Y') AS period`,
+      //   ])
+      //   .where(`created_at >= NOW() - INTERVAL 3 MONTH`)
+      //   .groupBy(`DATE_FORMAT(created_at, '%Y-%m')`)
+      //   .getRawMany();
+      const total = await this.investorRepo
+        .createQueryBuilder()
+        .where(`tanggal_kadaluarsa >= NOW()`)
+        .getCount();
+
+      const total_invest = await this.investorRepo
+        .createQueryBuilder()
+        .select('SUM(nilai) AS total_investasi')
+        .where('tanggal_kadaluarsa >= NOW()')
+        .getRawOne();
+      return {
+        total: total,
+        total_investasi: total_invest?.total_investasi || 0,
+      };
+    } catch (error) {
+      return error;
+    }
   }
 }

@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, In } from 'typeorm';
 import { ResponseService } from '../response/response.service';
 import { RMessage, RSuccessMessage } from '../response/response.interface';
 import { randomUUID } from 'crypto';
@@ -14,10 +14,11 @@ import * as fs from 'fs';
 import { DatetimeHelper } from '../helper/datetime.helper';
 import { KreditDocument } from './entities/kredit.entities';
 import { KreditSupportDocument } from './entities/kredit_support.entities';
-import { CreateKredit, KreditListDto } from './dto/kredit.dto';
+import { BayarKreditDto, CreateKredit, KreditListDto } from './dto/kredit.dto';
 import { StatusKredit } from './interface/kredit_status.interface';
 import { UsersService } from '../users/users.service';
 import { join } from 'path';
+import { KreditPaymentDocument } from './entities/kredit_payment.entities';
 
 @Injectable()
 export class KreditService {
@@ -26,6 +27,8 @@ export class KreditService {
     private readonly kreditRepo: Repository<KreditDocument>,
     @InjectRepository(KreditSupportDocument)
     private readonly kreditSuppRepo: Repository<KreditSupportDocument>,
+    @InjectRepository(KreditPaymentDocument)
+    private readonly kreditPaymentRepo: Repository<KreditPaymentDocument>,
     private readonly userService: UsersService,
     private readonly responseService: ResponseService,
   ) {}
@@ -397,6 +400,10 @@ export class KreditService {
           kreditData.status = StatusKredit.ongoing;
         }
 
+        if (param?.status === StatusKredit.done) {
+          kreditData.status = StatusKredit.done;
+        }
+
         if (param?.status === StatusKredit.reject) {
           kreditData.status = StatusKredit.reject;
           kreditData.rejected_at = new Date();
@@ -416,11 +423,70 @@ export class KreditService {
     }
   }
 
+  /** PEMBAYARAN */
+  async BayarKredit(user: any, body: BayarKreditDto, files: any) {
+    try {
+      const kreditDetail = await this.kreditRepo.findOneBy({
+        kredit_code: body?.kredit_code,
+      });
+
+      if (kreditDetail) {
+        const payment: Partial<KreditPaymentDocument> = {
+          kredit_code: kreditDetail?.kredit_code,
+          jml_bayar: Number(body?.jml_bayar),
+          payment_method: body?.payment_method,
+          nomor_rekening: body?.nomor_rekening,
+          pemilik_rekening: body?.pemilik_rekening,
+          bank_name: body?.bank_name,
+          no_referensi: body?.no_referensi,
+          rekening_tujuan: body?.rekening_tujuan,
+          payment_date: body?.payment_date,
+          verificator_id: user.id,
+          verify_at: new Date(),
+        };
+
+        const { bukti_payment } = await this.ImageProcessing(
+          payment.kredit_code,
+          files,
+          {},
+        );
+
+        payment.bukti_payment = bukti_payment;
+
+        const doSave = await this.kreditPaymentRepo
+          .save(payment)
+          .then(async (result) => {
+            const updateKredit = await this.kreditRepo
+              .save({ ...kreditDetail, last_payment: payment.payment_date })
+              .catch((err) => {
+                throw err;
+              });
+            return {
+              paymentInfo: result,
+              kredit: updateKredit,
+            };
+          })
+          .catch((err) => {
+            throw err;
+          });
+
+        return this.responseService.success(
+          true,
+          'Kredit telah dibuat',
+          doSave,
+        );
+      }
+    } catch (error) {
+      Logger.log('[ERROR] BAYAR KREDIT => ', error);
+      throw error;
+    }
+  }
+
   /** REPORT */
 
   async exportExcel(user, param: KreditListDto) {
     try {
-      const users = await this.ListKredit(user, param, true);
+      const users = await this.ListKredit(user, param, false);
       const excelObjects = await this.createExcelObjects(users);
       return excelObjects;
     } catch (error) {
@@ -447,15 +513,16 @@ export class KreditService {
     const rows = [
       [
         'No',
+        'kode',
         'nama',
         'no handphone',
-        'jenis pembiayaan',
         'tanggal pengajuan',
         'tanggal verifikasi',
         'tanggal approval',
         'tanggal akad',
         'tanggal jatuh tempo',
         'status',
+        'jenis pembiayaan',
         'nama produk',
         'jenis produk',
         'tipe produk',
@@ -476,10 +543,38 @@ export class KreditService {
       for (const items of excelObjects.data.items) {
         rows.push([
           i,
-          items.kredit_code ? items.kredit_code.toUpperCase() : '',
+          items?.kredit_code?.toUpperCase(),
+          items?.profile?.name,
+          items?.profile?.phone,
           items.tanggal_pengajuan
             ? DatetimeHelper.UTCToLocaleDate(items.tanggal_pengajuan)
             : '',
+          items.verify_at
+            ? DatetimeHelper.UTCToLocaleDate(items.verify_at)
+            : '',
+          items.tanggal_approval
+            ? DatetimeHelper.UTCToLocaleDate(items.tanggal_approval)
+            : '',
+          items.tanggal_akad
+            ? DatetimeHelper.UTCToLocaleDate(items.tanggal_akad)
+            : '',
+          items.tanggal_jatuh_tempo,
+          items.status,
+          items.jenis_pembiayaan,
+          items.nama_produk,
+          items.jenis_produk,
+          items.tipe_produk,
+          items.ukuran_produk,
+          items.warna_produk,
+          items.spesifikasi,
+          items.tenor,
+          items.harga_produk,
+          items.dp,
+          items.cicilan,
+          items.last_payment
+            ? DatetimeHelper.UTCToLocaleDate(items.last_payment)
+            : '',
+          items.notes,
         ]);
         i++;
       }
@@ -490,5 +585,33 @@ export class KreditService {
     return {
       rows: rows,
     };
+  }
+
+  /**
+   * STATISTIC
+   */
+
+  async Statistics() {
+    try {
+      const stats = await this.kreditRepo
+        .createQueryBuilder()
+        .select(['COUNT(id) AS total', `status`])
+        .andWhere('tanggal_pengajuan + INTERVAL tenor MONTH >= NOW()')
+        .groupBy(`status`)
+        .getRawMany();
+
+      const total_invest = await this.kreditRepo
+        .createQueryBuilder()
+        .select('SUM(harga_produk) AS total_outcome')
+        .where({ status: In(['Berlangsung', 'Menunggak']) })
+        .andWhere('tanggal_akad + INTERVAL tenor MONTH >= NOW()')
+        .getRawOne();
+      return {
+        stats: stats,
+        active_outcome: total_invest?.total_outcome || 0,
+      };
+    } catch (error) {
+      return error;
+    }
   }
 }

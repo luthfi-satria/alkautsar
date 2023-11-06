@@ -553,4 +553,30 @@ export class ProductService {
       rows: rows,
     };
   }
+
+  /**
+   * STATISTIC
+   */
+
+  async Statistics() {
+    try {
+      const total = await this.productRepo.createQueryBuilder().getCount();
+
+      const stokHabis = await this.StokHabis();
+      return {
+        total: total,
+        stokHabis: stokHabis,
+      };
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async StokHabis() {
+    return await this.productRepo
+      .createQueryBuilder()
+      .select(['kode_produk', 'name'])
+      .where('stok = min_stok')
+      .getRawMany();
+  }
 }
