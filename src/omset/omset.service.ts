@@ -115,7 +115,7 @@ export class OmsetService {
           .groupBy('thn')
           .getRawOne();
 
-        const { total_investasi } = await this.investorService.Statistics();
+        const { total_investasi } = await this.investorService.Statistics(year);
         let totalInvestor = 0;
         for (const items in investor) {
           const formulasi =

@@ -465,26 +465,24 @@ export class InvestorService {
    * STATISTIC
    */
 
-  async Statistics() {
+  async Statistics(nYear = '') {
     try {
-      // const stats = await this.investorRepo
-      //   .createQueryBuilder()
-      //   .select([
-      //     'COUNT(user_id) AS total',
-      //     `DATE_FORMAT(created_at, '%M-%Y') AS period`,
-      //   ])
-      //   .where(`created_at >= NOW() - INTERVAL 3 MONTH`)
-      //   .groupBy(`DATE_FORMAT(created_at, '%Y-%m')`)
-      //   .getRawMany();
+      const selectedYear = nYear || 'YEAR()';
       const total = await this.investorRepo
         .createQueryBuilder()
-        .where(`tanggal_kadaluarsa >= NOW()`)
+        .where(
+          `:year BETWEEN YEAR(tanggal_investasi) AND YEAR(tanggal_kadaluarsa)`,
+          { year: selectedYear },
+        )
         .getCount();
 
       const total_invest = await this.investorRepo
         .createQueryBuilder()
         .select('SUM(nilai) AS total_investasi')
-        .where('tanggal_kadaluarsa >= NOW()')
+        .where(
+          ':year BETWEEN YEAR(tanggal_investasi) AND YEAR(tanggal_kadaluarsa)',
+          { year: selectedYear },
+        )
         .getRawOne();
       return {
         total: total,
