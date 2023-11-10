@@ -150,4 +150,16 @@ export class InvestorController {
     };
     return style;
   }
+
+  /**
+   * LAPORAN INVESTOR AKTIF
+   */
+
+  @Get('active/list')
+  @ResponseStatusCode()
+  @UserType()
+  @AuthJwtGuard()
+  async ActiveInvestorList() {
+    return await this.investorService.ActiveInvestorList();
+  }
 }

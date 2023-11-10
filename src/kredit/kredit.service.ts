@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, In } from 'typeorm';
+import { Repository, Between, In, Like } from 'typeorm';
 import { ResponseService } from '../response/response.service';
 import { RMessage, RSuccessMessage } from '../response/response.interface';
 import { randomUUID } from 'crypto';
@@ -613,5 +613,215 @@ export class KreditService {
     } catch (error) {
       return error;
     }
+  }
+
+  async MonthlyIncome(date: string) {
+    try {
+      const income = await this.kreditPaymentRepo
+        .createQueryBuilder('kp')
+        .select([
+          'SUM(kp.jml_bayar) AS monthly_income',
+          `DATE_FORMAT(kp.payment_date,'%Y-%M') AS periode`,
+        ])
+        .where('kp.verify_at IS NOT NULL')
+        .andWhere(`DATE_FORMAT(kp.payment_date,'%Y-%m') = :findDate`, {
+          findDate: date,
+        })
+        .groupBy(`DATE_FORMAT(kp.payment_date, '%Y-%m')`)
+        .getRawOne();
+      return income;
+    } catch (error) {
+      Logger.log('[ERROR] MonthlyIncome =>', error);
+      return error;
+    }
+  }
+
+  /** REPORTING */
+  async LaporanKredit(user: any, param: any): Promise<any> {
+    try {
+      const limit = param.limit || 10;
+      const page = param.page || 1;
+      const skip = (page - 1) * limit;
+      let where = {};
+      let profile = {};
+
+      if (param?.profile_name) {
+        profile = { ...profile, name: Like(`%${param.profile_name}%`) };
+      }
+
+      if (param?.profile_phone) {
+        profile = { ...profile, phone: param.profile_phone };
+      }
+
+      if (param?.kredit_code) {
+        where = { ...where, kredit_code: param.kredit_code };
+      }
+
+      if (param?.tanggal_akad) {
+        const tanggal_akad = param?.tanggal_akad.split(':');
+        where = {
+          ...where,
+          tanggal_akad: Between(
+            tanggal_akad[0] + ' 00:00:00',
+            tanggal_akad[1] + ' 23:59:59',
+          ),
+        };
+      }
+
+      if (profile) {
+        where = {
+          ...where,
+          profile,
+        };
+      }
+
+      const query = this.kreditRepo.createQueryBuilder('kredit');
+      query
+        .select([
+          'kredit.*',
+          'profile.name',
+          'profile.phone',
+          '(kredit.harga_produk - kredit.dp - SUM(payments.jml_bayar)) AS sisa_tunggakan',
+          'SUM(payments.jml_bayar) AS total_setoran',
+        ])
+        .leftJoin('kredit.profile', 'profile')
+        .leftJoin('kredit.payments', 'payments')
+        .where('payments.verify_at IS NOT NULL')
+        .andWhere({ status: In(['Berlangsung', 'Selesai', 'Menunggak']) });
+
+      if (where) {
+        query.andWhere(where);
+      }
+
+      const count = await query.getCount();
+      let findQuery = {};
+      if (count > 0) {
+        findQuery = await query.offset(skip).limit(limit).getRawMany();
+      }
+
+      const results: RSuccessMessage = {
+        success: true,
+        message: 'Get laporan kredit success',
+        data: {
+          total: count,
+          page: page,
+          skip: skip,
+          limit: limit,
+          items: findQuery,
+        },
+      };
+
+      return results;
+    } catch (err) {
+      Logger.error(err.message, 'Kredit gagal ditampilkan');
+      throw err;
+    }
+  }
+
+  async DownloadLaporankredit(user, param: any) {
+    try {
+      const users = await this.LaporanKredit(user, param);
+      const excelObjects = await this.MapLaporanKredit(users);
+      return excelObjects;
+    } catch (error) {
+      Logger.log(error);
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: ['Gagal mengunduh rekapitulasi kredit', error.message],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  async MapLaporanKredit(excelObjects) {
+    if (!excelObjects && !excelObjects.data) {
+      throw new NotFoundException('No data to download');
+    }
+
+    const rows = [
+      [
+        'No',
+        'kode',
+        'nama',
+        'no handphone',
+        'tanggal pengajuan',
+        'tanggal verifikasi',
+        'tanggal approval',
+        'tanggal akad',
+        'tanggal jatuh tempo',
+        'status',
+        'jenis pembiayaan',
+        'nama produk',
+        'jenis produk',
+        'tipe produk',
+        'ukuran produk',
+        'warna produk',
+        'spesifikasi',
+        'tenor',
+        'harga produk',
+        'dp',
+        'cicilan',
+        'pembayaran terakhir',
+        'notes',
+        'sisa tunggakan',
+        'total setoran',
+      ],
+    ];
+
+    if (excelObjects.data.items) {
+      let i = 1;
+      for (const items of excelObjects.data.items) {
+        rows.push([
+          i,
+          items?.kredit_code?.toUpperCase(),
+          items?.profile_name,
+          items?.profile_phone,
+          items.tanggal_pengajuan
+            ? DatetimeHelper.UTCToLocaleDate(items.tanggal_pengajuan)
+            : '',
+          items.verify_at
+            ? DatetimeHelper.UTCToLocaleDate(items.verify_at)
+            : '',
+          items.tanggal_approval
+            ? DatetimeHelper.UTCToLocaleDate(items.tanggal_approval)
+            : '',
+          items.tanggal_akad
+            ? DatetimeHelper.UTCToLocaleDate(items.tanggal_akad)
+            : '',
+          items.tanggal_jatuh_tempo,
+          items.status,
+          items.jenis_pembiayaan,
+          items.nama_produk,
+          items.jenis_produk,
+          items.tipe_produk,
+          items.ukuran_produk,
+          items.warna_produk,
+          items.spesifikasi,
+          items.tenor,
+          items.harga_produk,
+          items.dp,
+          items.cicilan,
+          items.last_payment
+            ? DatetimeHelper.UTCToLocaleDate(items.last_payment)
+            : '',
+          items.notes,
+          items.sisa_tunggakan,
+          items.total_setoran,
+        ]);
+        i++;
+      }
+    } else {
+      rows.push(['Tidak ada data yang dapat ditampilkan']);
+    }
+
+    return {
+      rows: rows,
+    };
   }
 }

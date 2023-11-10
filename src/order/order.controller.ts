@@ -201,4 +201,60 @@ export class OrderController {
     };
     return style;
   }
+
+  @Get('monthly_report/product_sold')
+  @ResponseStatusCode()
+  @UserTypeAndLevel('owner.*', 'organisasi.*')
+  @AuthJwtGuard()
+  async MonthlyReport(@User() user: any, @Query() query: any) {
+    return await this.orderService.MonthlyReport(user, query);
+  }
+
+  @Get('monthly_report/product_sold/print')
+  @ResponseStatusCode()
+  @UserTypeAndLevel('owner.*', 'organisasi.*')
+  @AuthJwtGuard()
+  async PrintMonthlyReport(@User() user: any, @Query() query: any, @Res() res) {
+    try {
+      const excelObjects = await this.orderService.exportMonthlyReport(
+        user,
+        query,
+      );
+
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'PT. Laju Investama';
+
+      // add worksheet
+      const mySheet = workbook.addWorksheet('laporan_produk_terjual', {
+        properties: { defaultColWidth: 20 },
+      });
+
+      // assign data to rows
+      mySheet.addRows(excelObjects.rows);
+
+      // styling
+      const style = await this.stylingSheet();
+      mySheet.getRow(1).font = style.font;
+      mySheet.getRow(1).alignment = {
+        vertical: 'middle',
+        horizontal: 'center',
+        wrapText: true,
+      };
+
+      const fileName = `laporan_produk_terjual.xlsx`;
+
+      res.set({
+        'Content-Type':
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': 'attachment; filename=' + `${fileName}`,
+      });
+
+      return workbook.xlsx.write(res).then(function () {
+        return res.status(200).end();
+      });
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 }

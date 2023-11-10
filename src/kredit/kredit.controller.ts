@@ -261,4 +261,68 @@ export class KreditController {
     };
     return style;
   }
+
+  /**
+   * MONTHLY REPORT
+   */
+
+  @Get('monthly_report/kredit')
+  @ResponseStatusCode()
+  @UserTypeAndLevel('owner.*')
+  @AuthJwtGuard()
+  async LaporanKredit(@User() user: any, @Query() query: any) {
+    return await this.kreditService.LaporanKredit(user, query);
+  }
+
+  @Get('monthly_report/kredit/print')
+  @AuthJwtGuard()
+  @UserType('owner', 'organisasi')
+  @ResponseStatusCode()
+  async DownloadLaporankredit(
+    @User() user: any,
+    @Query() param: any,
+    @Res() res,
+  ) {
+    try {
+      const excelObjects = await this.kreditService.DownloadLaporankredit(
+        user,
+        param,
+      );
+
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'PT. Laju Investama';
+
+      // add worksheet
+      const mySheet = workbook.addWorksheet('Laporan Kredit', {
+        properties: { defaultColWidth: 20 },
+      });
+
+      // assign data to rows
+      mySheet.addRows(excelObjects.rows);
+
+      // styling
+      const style = await this.stylingSheet();
+      mySheet.getRow(1).font = style.font;
+      mySheet.getRow(1).alignment = {
+        vertical: 'middle',
+        horizontal: 'center',
+        wrapText: true,
+      };
+
+      const fileName = `rekapitulasi_kredit.xlsx`;
+
+      res.set({
+        'Content-Type':
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': 'attachment; filename=' + `${fileName}`,
+      });
+
+      return workbook.xlsx.write(res).then(function () {
+        return res.status(200).end();
+      });
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 }

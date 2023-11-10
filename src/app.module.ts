@@ -22,6 +22,7 @@ import { CartModule } from './cart/cart.module';
 import { OrderModule } from './order/order.module';
 import { KreditModule } from './kredit/kredit.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { OmsetModule } from './omset/omset.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -51,6 +52,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     OrderModule,
     KreditModule,
     DashboardModule,
+    OmsetModule,
   ],
   controllers: [AppController],
   providers: [AppService, SeedingDB, SchedullerService],

@@ -494,4 +494,48 @@ export class InvestorService {
       return error;
     }
   }
+
+  async ActiveInvestorListQuery() {
+    const query = this.investorRepo.createQueryBuilder('inv');
+    query
+      .select([
+        'inv.nilai',
+        'inv.jangka_waktu',
+        'inv.tanggal_investasi',
+        'inv.tanggal_kadaluarsa',
+        'profile.name',
+      ])
+      .leftJoin('inv.profile', 'profile')
+      .where('inv.tanggal_kadaluarsa >= NOW()')
+      .andWhere('inv.verify_at IS NOT NULL');
+
+    let findQuery = {};
+    let count = 0;
+
+    count = await query.getCount();
+    findQuery = await query.getRawMany();
+    return {
+      count: count,
+      investor: findQuery,
+    };
+  }
+
+  async ActiveInvestorList() {
+    try {
+      const investor = await this.ActiveInvestorListQuery();
+      const results: RSuccessMessage = {
+        success: true,
+        message: 'Get List Investor Aktif success',
+        data: {
+          total: investor?.count,
+          items: investor?.investor,
+        },
+      };
+
+      return results;
+    } catch (err) {
+      Logger.error(err.message, 'Investor gagal ditampilkan');
+      throw err;
+    }
+  }
 }

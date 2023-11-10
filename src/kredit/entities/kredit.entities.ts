@@ -5,6 +5,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -13,6 +14,7 @@ import {
 import { UserProfileDocuments } from '../../database/entities/profile.entities';
 import { StatusKredit } from '../interface/kredit_status.interface';
 import { KreditSupportDocument } from './kredit_support.entities';
+import { KreditPaymentDocument } from './kredit_payment.entities';
 
 @Entity({ name: 'kredit' })
 export class KreditDocument {
@@ -120,6 +122,9 @@ export class KreditDocument {
 
   @OneToOne(() => KreditSupportDocument, (doc) => doc.kredit)
   document?: KreditSupportDocument;
+
+  @OneToMany(() => KreditPaymentDocument, (history) => history.kredit)
+  payments?: KreditPaymentDocument[];
 
   @CreateDateColumn({
     type: 'timestamp',

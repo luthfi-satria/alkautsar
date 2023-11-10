@@ -424,8 +424,8 @@ export class OrderService {
 
   async exportExcel(user, param: OrderListDto) {
     try {
-      const users = await this.ListOrder(user, param, true);
-      const excelObjects = await this.createExcelObjects(users);
+      const order = await this.ListOrder(user, param, true);
+      const excelObjects = await this.createExcelObjects(order);
       return excelObjects;
     } catch (error) {
       Logger.log(error);
@@ -435,7 +435,7 @@ export class OrderService {
           {
             value: '',
             property: '',
-            constraint: ['Gagal mengunduh data user', error.message],
+            constraint: ['Gagal mengunduh data order', error.message],
           },
           'Bad Request',
         ),
@@ -578,5 +578,125 @@ export class OrderService {
     } catch (error) {
       return error;
     }
+  }
+
+  async MonthlyIncome(date: string) {
+    try {
+      const income = await this.orderRepo
+        .createQueryBuilder()
+        .select([
+          'SUM(grand_total) AS monthly_income',
+          `DATE_FORMAT(payment_date,'%Y-%M') AS periode`,
+        ])
+        .where('payment_date IS NOT NULL')
+        .andWhere('verified_at IS NOT NULL')
+        .andWhere('canceled_at IS NULL')
+        .andWhere(`DATE_FORMAT(payment_date,'%Y-%m') = :findDate`, {
+          findDate: date,
+        })
+        .groupBy(`DATE_FORMAT(payment_date, '%Y-%m')`)
+        .getRawOne();
+      return income;
+    } catch (error) {
+      Logger.log('[ERROR] MonthlyIncome =>', error);
+      return error;
+    }
+  }
+
+  /**
+   * MONTHLY REPORT
+   * @param user
+   * @param param
+   * @param raw
+   * @returns
+   */
+  async MonthlyReport(user: any, param: any): Promise<any> {
+    try {
+      const period = param?.period?.split(':');
+
+      const query = this.orderDetailRepo.createQueryBuilder('details');
+      query
+        .select([
+          'SUM(details.qty) as total',
+          'product.kode_produk',
+          'product.name',
+          `DATE_FORMAT(details.created_at, '%Y-%M') as period`,
+        ])
+        .leftJoin('details.product', 'product')
+        .leftJoin('details.order', 'order')
+        .where({
+          order: {
+            status: StatusOrder.success,
+          },
+          created_at: Between(period[0] + ' 00:00:00', period[1] + ' 23:59:59'),
+        })
+        .groupBy('details.product_id')
+        .addGroupBy(`DATE_FORMAT(details.created_at, '%Y-%M')`);
+
+      let findQuery = {};
+
+      findQuery = await query.getRawMany();
+      const results: RSuccessMessage = {
+        success: true,
+        message: 'Get stats product success',
+        data: {
+          items: findQuery,
+        },
+      };
+
+      return results;
+    } catch (err) {
+      Logger.error(err.message, 'Stats produk gagal ditampilkan');
+      throw err;
+    }
+  }
+
+  async exportMonthlyReport(user: any, param: any) {
+    try {
+      const monthlyRep = await this.MonthlyReport(user, param);
+      const excelObjects = await this.mappMonthlyReport(monthlyRep);
+      return excelObjects;
+    } catch (error) {
+      Logger.log(error);
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: ['Gagal mengunduh laporan bulanan', error.message],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  async mappMonthlyReport(excelObjects) {
+    if (!excelObjects && !excelObjects.data) {
+      throw new NotFoundException('No data to download');
+    }
+
+    const rows = [['No', 'Kode Produk', 'Nama Produk', 'Periode', 'Terjual']];
+
+    if (excelObjects.data.items) {
+      let i = 1;
+      for (const items of excelObjects.data.items) {
+        rows.push([
+          i,
+          items?.product_kode_produk,
+          items?.product_name,
+          items?.period,
+          items?.total,
+        ]);
+        i++;
+      }
+    } else {
+      rows.push(['Tidak ada data yang dapat ditampilkan']);
+    }
+
+    return {
+      rows: rows,
+    };
   }
 }
