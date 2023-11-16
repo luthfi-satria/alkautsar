@@ -32,17 +32,15 @@ export class GetUsergroupAccessID {
 export class ListAccessmenu {
   @IsOptional()
   @IsString()
-  startId: string;
+  usergroup: string;
 
   @IsOptional()
   @IsString()
-  searchQuery: string;
+  menu: string;
 
   @IsOptional()
-  @IsNumber()
-  @Type(() => Number)
-  @Min(0)
-  skip: number;
+  @IsString()
+  group_level: string;
 
   @IsOptional()
   @IsNumber()
@@ -55,4 +53,12 @@ export class ListAccessmenu {
   @Type(() => Number)
   @Min(1)
   page: number;
+
+  @IsOptional()
+  @IsString()
+  order_by: string;
+
+  @IsOptional()
+  @IsString()
+  orientation: string;
 }

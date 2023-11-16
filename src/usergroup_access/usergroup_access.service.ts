@@ -5,7 +5,7 @@ import { AccessDocument } from '../database/entities/usergroup_access.entity';
 import { RSuccessMessage } from '../response/response.interface';
 import { ListAccessmenu } from './dto/usergroup_access.dto';
 import { UsergroupService } from '../usergroup/usergroup.service';
-import { Repository } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import * as fs from 'fs';
 import { join } from 'path';
 
@@ -24,32 +24,43 @@ export class UsergroupAccessService {
       const limit = param.limit || 10;
       const page = param.page || 1;
       const skip = (page - 1) * limit;
+      let where = {};
+      let group = {};
 
-      const filter: any = [];
-      if (Object.keys(param).length > 0) {
-        for (const items in param) {
-          if (['limit', 'page', 'skip'].includes(items) == false) {
-            const filterVal = ['LIKE', `'%${param[items]}%'`];
-            filter.push(`access_menu.${items} ${filterVal[0]} ${filterVal[1]}`);
-          }
-        }
+      if (param?.usergroup) {
+        group = { ...group, name: Like(`%${param?.usergroup}%`) };
+      }
+
+      if (param?.group_level) {
+        group = { ...group, level: Like(`%${param?.group_level}%`) };
+      }
+
+      if (param?.menu) {
+        where = {
+          ...where,
+          menus: {
+            name: Like(`%${param?.menu}%`),
+          },
+        };
+      }
+
+      if (group) {
+        where = { ...where, usergroup: { ...group } };
       }
 
       const query = this.accessRepo
         .createQueryBuilder('access_menu')
         .leftJoinAndSelect('access_menu.usergroup', 'group')
-        .leftJoinAndSelect('access_menu.menus', 'appmenus');
+        .leftJoinAndSelect('access_menu.menus', 'appmenus')
+        .where(where);
 
-      if (filter.length > 0) {
-        const queryFilter = filter.join(' AND ');
-        query.where(queryFilter);
-      }
-
+      // console.log(query.getSql());
       const [findQuery, count] = await query
         .orderBy('appmenus.level', 'ASC')
         .addOrderBy('appmenus.sequence', 'ASC')
+        .addOrderBy('appmenus.name', 'ASC')
         .skip(skip)
-        .limit(limit)
+        .take(limit)
         .getManyAndCount();
 
       const results: RSuccessMessage = {
@@ -162,28 +173,19 @@ export class UsergroupAccessService {
         );
       }
 
-      body.usergroup = body.usergroup_id;
-      body.menu = body.menu_id;
-      delete body.usergroup_id;
-      delete body.menu_id;
+      const saveData = {
+        ...isExists,
+        ...body,
+      };
 
-      const updated = Object.assign(isExists, body);
-      const updateAction = await this.accessRepo.update({ id: id }, updated);
+      const updateData = await this.accessRepo.save(saveData).catch((err) => {
+        throw err;
+      });
 
-      if (updateAction) {
-        return this.responseService.success(
-          true,
-          'Access menu has been updated!',
-        );
-      }
-      return this.responseService.error(
-        HttpStatus.BAD_REQUEST,
-        {
-          value: id,
-          property: 'Access menu',
-          constraint: ['Access menu failed to update!'],
-        },
-        'Access menu failed to updated!',
+      return this.responseService.success(
+        true,
+        'Akses menu telah diubah',
+        updateData,
       );
     } catch (err) {
       Logger.log(err.message, 'Cannot update Access menu');

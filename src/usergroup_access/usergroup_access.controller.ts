@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import { UsergroupAccessService } from './usergroup_access.service';
 import { ResponseStatusCode } from '../response/response.decorator';
@@ -29,7 +30,7 @@ export class UsergroupAccessController {
   @ResponseStatusCode()
   @UserType('owner', 'organisasi')
   @AuthJwtGuard()
-  async getAllAccess(@Body() body: ListAccessmenu) {
+  async getAllAccess(@Query() body: ListAccessmenu) {
     return await this.accessService.getAll(body);
   }
 
@@ -53,11 +54,8 @@ export class UsergroupAccessController {
   @ResponseStatusCode()
   @UserType('owner', 'organisasi')
   @AuthJwtGuard()
-  async update(
-    @Param() param: GetUsergroupAccessID,
-    @Body() body: UsergroupAccessDto,
-  ) {
-    return await this.accessService.update(param.id, body);
+  async update(@Param('id') id: string, @Body() body: UsergroupAccessDto) {
+    return await this.accessService.update(id, body);
   }
 
   @Delete(':id')
