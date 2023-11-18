@@ -1,20 +1,18 @@
 version: '3'
 services:
-  nginx:
+  proxy:
     image: nginx:latest
-    container_name: nginx-server
+    container_name: proxy
     build:
       context: . 
       dockerfile: .nginx.Dockerfile
-    volumes:
-      - ./nginx/conf.d/:/etc/nginx/conf.d
-      - ./nginx/ssl/:/etc/nginx/ssl
+    # volumes:
+    #   - ./nginx/conf.d/:/etc/nginx/conf.d
+    #   - ./nginx/ssl/:/etc/nginx/ssl
     ports:
       - 80:80
       - 443:443
-    command: /bin/sh -c "nginx -g 'daemon off;'"
-    networks:
-      - alkautsar
+    # command: /bin/sh -c "nginx -g 'daemon off;'"
 
   lajuApi:
     container_name: lajuApi
@@ -29,10 +27,9 @@ services:
     ports:
       - '3000:3000'
     depends_on:
-      # - nginx
       - mariadb
-    networks:
-      - alkautsar
+      - proxy
+      - redis
 
   lajuApp:
     container_name: lajuApp
@@ -47,8 +44,9 @@ services:
       - '5173:5173'
     depends_on:
       - mariadb
-    networks:
-      - alkautsar
+      - proxy
+      - redis
+      - lajuApi
     
   mariadb:
     container_name: mariadb
@@ -60,12 +58,9 @@ services:
       - MYSQL_DATABASE=alkautsar
     volumes:
       - mariadata:/var/lib/mysql:rw
-      # - marialog:/var/lib/mysql/logs:rw
       - /var/docker/mariadb/conf:/etc/mysql
     ports:
       - '3306:3306'
-    networks:
-      - alkautsar
 
   redis:
     container_name: lajuredis
@@ -76,12 +71,6 @@ services:
       - redisdata:/bitnami/redis/data:rw
     ports:
       - '6379:6379'
-    networks:
-      - alkautsar
-
-networks: 
-    alkautsar:
-        driver: bridge
 
 volumes:
   mariadata:

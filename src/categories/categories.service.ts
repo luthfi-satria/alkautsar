@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThanOrEqual, MoreThan, Repository } from 'typeorm';
+import { LessThanOrEqual, Like, MoreThan, Repository } from 'typeorm';
 import { ResponseService } from '../response/response.service';
 import { RSuccessMessage } from '../response/response.interface';
 import { UsersService } from '../users/users.service';
@@ -28,31 +28,16 @@ export class CategoryService {
 
   async ListCategory(param: ListCategoryDto, raw = false) {
     try {
-      const limit = param.limit || 10;
-      const page = param.page || 1;
+      const limit = param?.limit || 10;
+      const page = param?.page || 1;
       const skip = (page - 1) * limit;
+      let where = {};
 
-      const query = this.categoryRepo.createQueryBuilder('cat');
-
-      const filter: any = [];
-      if (Object.keys(param).length > 0) {
-        for (const items in param) {
-          if (
-            ['limit', 'page', 'skip', 'includeDeleted'].includes(items) ==
-              false &&
-            param[items] != ''
-          ) {
-            const filterVal = ['LIKE', `'%${param[items]}%'`];
-            const flags = 'cat';
-            filter.push(`${flags}.${items} ${filterVal[0]} ${filterVal[1]}`);
-          }
-        }
-
-        if (filter.length > 0) {
-          const queryFilter = filter.join(' AND ');
-          query.where(queryFilter);
-        }
+      if (param?.name) {
+        where = { ...where, name: Like(`%${param?.name}%`) };
       }
+
+      const query = this.categoryRepo.createQueryBuilder('cat').where(where);
 
       let findQuery = {};
       let count = 0;

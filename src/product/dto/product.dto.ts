@@ -28,7 +28,7 @@ export class ListProductDto {
       each: true,
     },
   )
-  category_id?: number[] | number;
+  category_id?: number[];
 
   @IsOptional()
   @IsString()

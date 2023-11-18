@@ -28,7 +28,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { editFileName, imageFileFilter } from '../helper/utility.helper';
 import { UserTypeAndLevel } from '../hash/guard/user-type-and-level.decorator';
-import { ProductDocuments } from '../database/entities/product.entities';
 import * as fs from 'fs';
 import * as mimeType from 'mime-types';
 

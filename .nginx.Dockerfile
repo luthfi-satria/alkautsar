@@ -1,6 +1,7 @@
 FROM nginx:1.21
 
-# COPY ./nginx/nginx.conf /etc/nginx/conf.d/nginx.conf
+COPY ./nginx/conf.d/nginx.conf /etc/nginx/conf.d/default.conf
 # COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
-# COPY ./nginx/ssl /etc/nginx/ssl
-COPY ./nginx /etc/nginx
+COPY ./nginx/ssl/certs/ /etc/ssl/certs/nginx/
+COPY ./nginx/ssl/ssl.conf /etc/nginx/ssl/ssl.conf
+# COPY ./nginx /etc/nginx

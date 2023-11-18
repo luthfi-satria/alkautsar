@@ -6,7 +6,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {
+  Between,
+  In,
+  LessThanOrEqual,
+  Like,
+  MoreThan,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { ResponseService } from '../response/response.service';
 import { RSuccessMessage } from '../response/response.interface';
 import {
@@ -30,65 +38,43 @@ export class ProductService {
       const limit = param.limit || 10;
       const page = param.page || 1;
       const skip = (page - 1) * limit;
+      let where = {};
+
+      if (param?.category_id) {
+        where = { ...where, category_id: In(param?.category_id) };
+      }
+
+      if (param?.name) {
+        where = { ...where, name: Like(`%${param?.name}%`) };
+      }
+
+      if (param?.kode_produk) {
+        where = { ...where, kode_produk: Like(`%${param?.kode_produk}%`) };
+      }
+
+      if (param?.status) {
+        const status = param?.status == 'publish' ? 1 : 0;
+        where = { ...where, status: status };
+      }
+
+      if (param?.stock_status && param?.stock_status == 'tersedia') {
+        where = { ...where, stok: MoreThan('produk.min_stok') };
+      }
+      if (param?.stock_status && param?.stock_status == 'habis') {
+        where = { ...where, stok: LessThanOrEqual('produk.min_stok') };
+      }
+
+      const minHarga = param?.harga_min || 0;
+      const maxHarga = param?.harga_max || false;
+      if (maxHarga) {
+        where = { ...where, harga_jual: Between(minHarga, maxHarga) };
+      } else if (minHarga) {
+        where = { ...where, harga_jual: MoreThanOrEqual(minHarga) };
+      }
 
       const query = this.productRepo.createQueryBuilder('produk');
 
-      query.leftJoinAndSelect('produk.category', 'category');
-
-      const filter: any = [];
-      if (Object.keys(param).length > 0) {
-        for (const items in param) {
-          if (
-            [
-              'limit',
-              'page',
-              'skip',
-              'includeDeleted',
-              'status',
-              'stock_status',
-              'harga_min',
-              'harga_max',
-              'order_by',
-              'orientation',
-            ].includes(items) == false &&
-            param[items] != ''
-          ) {
-            const filterVal =
-              items == 'category_id'
-                ? ['IN', `(${param[items]})`]
-                : ['LIKE', `'%${param[items]}%'`];
-            const flags = 'produk';
-            filter.push(`${flags}.${items} ${filterVal[0]} ${filterVal[1]}`);
-          }
-        }
-
-        if (param?.status && param?.status == 'publish') {
-          filter.push(`produk.status = '1'`);
-        } else if (param?.status && param?.status == 'draft') {
-          filter.push(`produk.status = '0'`);
-        }
-
-        const minHarga = param?.harga_min || 0;
-        const maxHarga = param?.harga_max || false;
-        if (maxHarga) {
-          filter.push(
-            `(produk.harga_jual BETWEEN ${minHarga} AND ${maxHarga})`,
-          );
-        } else if (minHarga) {
-          filter.push(`produk.harga_jual >= ${minHarga}`);
-        }
-
-        if (param?.stock_status && param?.stock_status == 'habis') {
-          filter.push(`produk.stok <= produk.min_stok`);
-        } else if (param?.stock_status && param?.stock_status == 'tersedia') {
-          filter.push(`produk.stok > produk.min_stok`);
-        }
-
-        if (filter.length > 0) {
-          const queryFilter = filter.join(' AND ');
-          query.where(queryFilter);
-        }
-      }
+      query.leftJoinAndSelect('produk.category', 'category').where(where);
 
       let findQuery = {};
       let count = 0;

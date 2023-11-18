@@ -467,7 +467,8 @@ export class InvestorService {
 
   async Statistics(nYear = '') {
     try {
-      const selectedYear = nYear || 'YEAR()';
+      const dates = new Date();
+      const selectedYear = nYear || dates.getFullYear();
       const total = await this.investorRepo
         .createQueryBuilder()
         .where(
