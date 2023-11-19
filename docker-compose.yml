@@ -72,6 +72,13 @@ services:
     ports:
       - '6379:6379'
 
+  # tunneling:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: tunneling
+  #   environment:
+  #     - TUNNEL_TOKEN=eyJhIjoiZmFlNjYyYTZiZTQ5ZjM2ZTYxZDFiNzAzZjZkNzVmYmIiLCJ0IjoiOGQxMGI2NmYtZjcyMy00NThiLThhZTctMTExNDIwYjZmOGIwIiwicyI6IlpqZGpabVk1T0RNdE9USmpOUzAwWkRjekxXSmpOell0TUdNeU5HSTJNMlUzTjJRdyJ9
+  #   command: "tunnel --no-autoupdate run"
+
 volumes:
   mariadata:
     driver: local
