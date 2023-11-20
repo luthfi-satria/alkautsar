@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InvestorDocuments } from '../database/entities/investor.entities';
-import { LessThanOrEqual, MoreThan, Repository } from 'typeorm';
+import { IsNull, LessThanOrEqual, Like, MoreThan, Not, Repository } from 'typeorm';
 import { ResponseService } from '../response/response.service';
 import {
   CreateInvestorDto,
@@ -32,12 +32,58 @@ export class InvestorService {
       const limit = param.limit || 10;
       const page = param.page || 1;
       const skip = (page - 1) * limit;
+      let where = {};
+      let profile = {};
+
+      if (param?.name) {
+        profile = { ...profile, name: Like(`%${param?.name}%`) };
+      }
+      if (param?.email) {
+        profile = { ...profile, email: param?.email };
+      }
+      if (param?.phone) {
+        profile = { ...profile, phone: param?.phone };
+      }
+      if (param?.ktp) {
+        profile = { ...profile, ktp: param?.ktp };
+      }
+      if (param?.gender) {
+        profile = { ...profile, gender: param?.gender };
+      }
+
+      if (param?.no_investasi) {
+        where = { ...where, no_investasi: param?.no_investasi };
+      }
+
+      if (param?.nilai) {
+        where = { ...where, nilai: param?.nilai };
+      }
+
+      if (param?.jangka_waktu) {
+        where = { ...where, jangka_waktu: param?.jangka_waktu };
+      }
+
+      if (param?.tanggal_investasi) {
+        where = { ...where, tanggal_investasi: param?.tanggal_investasi };
+      }
+
+      if (param?.tanggal_kadaluarsa) {
+        where = { ...where, tanggal_kadaluarsa: param?.tanggal_kadaluarsa };
+      }
+
+      if (param?.is_verified == 'sudah') {
+        where = { ...where, verify_at: Not(IsNull()) };
+      }
+      if (param?.is_verified == 'belum') {
+        where = { ...where, verify_at: IsNull() };
+      }
 
       const query = this.investorRepo.createQueryBuilder('inv');
       if (raw == false) {
         query
           .select([
             'inv.user_id',
+            'inv.no_investasi',
             'inv.nilai',
             'inv.jangka_waktu',
             'inv.no_rekening',
@@ -56,35 +102,11 @@ export class InvestorService {
         query.leftJoinAndSelect('inv.profile', 'profile');
       }
 
-      const filter: any = [];
-      if (Object.keys(param).length > 0) {
-        for (const items in param) {
-          if (
-            ['limit', 'page', 'skip', 'is_verified'].includes(items) == false &&
-            param[items] != ''
-          ) {
-            const filterVal =
-              items == 'usergroup_id'
-                ? ['=', param[items]]
-                : ['LIKE', `'%${param[items]}%'`];
-            const flags = ['name', 'email', 'phone', 'gender'].includes(items)
-              ? 'profile'
-              : 'inv';
-            filter.push(`${flags}.${items} ${filterVal[0]} ${filterVal[1]}`);
-          }
-        }
-
-        if (param?.is_verified == 'sudah') {
-          filter.push(`inv.verify_at IS NOT NULL`);
-        } else if (param?.is_verified == 'belum') {
-          filter.push(`inv.verify_at IS NULL`);
-        }
-
-        if (filter.length > 0) {
-          const queryFilter = filter.join(' AND ');
-          query.where(queryFilter);
-        }
+      if (profile) {
+        where = { ...where, profile };
       }
+
+      query.where(where);
 
       let findQuery = {};
       let count = 0;

@@ -1,12 +1,12 @@
 import { Injectable, Logger, HttpStatus } from '@nestjs/common';
-import { UsergroupDto } from './dto/usergroup.dto';
+import { ListUsergroup, UsergroupDto } from './dto/usergroup.dto';
 import { UsergroupDocument } from '../database/entities/usergroup.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ResponseService } from '../response/response.service';
 import * as fs from 'fs';
 import { join } from 'path';
 import { RSuccessMessage } from '../response/response.interface';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 
 @Injectable()
 export class UsergroupService {
@@ -16,30 +16,26 @@ export class UsergroupService {
     private readonly responseService: ResponseService,
   ) {}
 
-  async getAll(param) {
+  async getAll(param: ListUsergroup) {
     try {
       const limit = param.limit || 10;
       const page = param.page || 1;
       const skip = (page - 1) * limit;
+      let where = {};
 
-      const query = this.usergroupRepo.createQueryBuilder('group');
-      const filter: any = [];
-      if (Object.keys(param).length > 0) {
-        for (const items in param) {
-          if (['limit', 'page', 'skip'].includes(items) == false) {
-            const filterVal =
-              items == 'is_default'
-                ? ['=', param[items]]
-                : ['LIKE', `'%${param[items]}%'`];
-            filter.push(`${items} ${filterVal[0]} ${filterVal[1]}`);
-          }
-        }
-
-        if (filter.length > 0) {
-          const queryFilter = filter.join(' AND ');
-          query.where(queryFilter);
-        }
+      if (param?.level) {
+        where = { ...where, level: param?.level };
       }
+
+      if (param?.name) {
+        where = { ...where, name: Like(`%${param?.name}%`) };
+      }
+
+      if (param?.is_default) {
+        where = { ...where, is_default: param?.is_default };
+      }
+
+      const query = this.usergroupRepo.createQueryBuilder('group').where(where);
 
       const [findQuery, count] = await query
         .skip(skip)

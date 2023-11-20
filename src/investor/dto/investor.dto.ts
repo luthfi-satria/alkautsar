@@ -27,7 +27,15 @@ export class ListInvestorDto {
 
   @IsOptional()
   @IsString()
+  gender: string;
+
+  @IsOptional()
+  @IsString()
   bank: string;
+
+  @IsOptional()
+  @IsString()
+  no_investasi: string;
 
   @IsOptional()
   @IsNumber()
