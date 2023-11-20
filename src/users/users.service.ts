@@ -17,7 +17,7 @@ import { Gender } from '../hash/guard/interface/user.interface';
 import { RSuccessMessage } from '../response/response.interface';
 import { join } from 'path';
 import * as fs from 'fs';
-import { Repository } from 'typeorm';
+import { IsNull, Like, Not, Repository } from 'typeorm';
 import { UserProfileDocuments } from '../database/entities/profile.entities';
 import { updateProfileDto } from './dto/profile.dto';
 import { DatetimeHelper } from '../helper/datetime.helper';
@@ -302,7 +302,37 @@ export class UsersService {
       const limit = param.limit || 10;
       const page = param.page || 1;
       const skip = (page - 1) * limit;
+      let where = {};
+      let profile = {};
 
+      if (param?.email) {
+        profile = { ...profile, email: param?.email };
+      }
+      if (param?.name) {
+        profile = { ...profile, name: Like(`%${param?.name}%`) };
+      }
+      if (param?.gender) {
+        profile = { ...profile, gender: param?.gender };
+      }
+      if (param?.phone) {
+        profile = { ...profile, phone: Like(`%${param?.phone}%`) };
+      }
+      if (param?.status == 'baru') {
+        profile = { ...profile, verify_at: IsNull() };
+      }
+      if (param?.status == 'lama') {
+        profile = { ...profile, verify_at: Not(IsNull()) };
+      }
+      if (param?.usergroup_id) {
+        where = { ...where, usergroup_id: param?.usergroup_id };
+      }
+      if (param?.username) {
+        where = { ...where, username: Like(`%${param?.username}%`) };
+      }
+
+      if (profile) {
+        where = { ...where, profile };
+      }
       const query = this.usersRepo.createQueryBuilder('user');
       if (raw == false) {
         query
@@ -326,37 +356,7 @@ export class UsersService {
           .leftJoinAndSelect('user.profile', 'profile')
           .leftJoinAndSelect('user.usergroup', 'group');
       }
-
-      const filter: any = [];
-
-      if (Object.keys(param).length > 0) {
-        for (const items in param) {
-          if (
-            ['limit', 'page', 'skip', 'status'].includes(items) == false &&
-            param[items] != ''
-          ) {
-            const filterVal =
-              items == 'usergroup_id'
-                ? ['=', param[items]]
-                : ['LIKE', `'%${param[items]}%'`];
-            const flags = ['name', 'email', 'phone', 'gender'].includes(items)
-              ? 'profile'
-              : 'user';
-            filter.push(`${flags}.${items} ${filterVal[0]} ${filterVal[1]}`);
-          }
-        }
-
-        if (param?.status && param?.status == 'baru') {
-          filter.push(`profile.verify_at IS NULL`);
-        } else if (param?.status && param?.status == 'lama') {
-          filter.push(`profile.verify_at IS NOT NULL`);
-        }
-
-        if (filter.length > 0) {
-          const queryFilter = filter.join(' AND ');
-          query.where(queryFilter);
-        }
-      }
+      query.where(where);
 
       let findQuery = {};
       let count = 0;
