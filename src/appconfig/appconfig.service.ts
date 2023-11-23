@@ -7,7 +7,7 @@ import * as fs from 'fs';
 import { join } from 'path';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
@@ -25,23 +25,20 @@ export class AppconfigService {
       const limit = param.limit || 10;
       const page = param.page || 1;
       const skip = (page - 1) * limit;
-
-      const query = this.appconfigRepo.createQueryBuilder();
-
-      const filter: any = [];
-      if (Object.keys(param).length > 0) {
-        for (const items in param) {
-          if (['limit', 'page', 'skip'].includes(items) == false) {
-            const filterVal = ['LIKE', `'%${param[items]}%'`];
-            filter.push(`${items} ${filterVal[0]} ${filterVal[1]}`);
-          }
-        }
-
-        if (filter.length > 0) {
-          const queryFilter = filter.join(' AND ');
-          query.where(queryFilter);
-        }
+      let where = {};
+      if (param?.name) {
+        where = { ...where, name: Like(`%${param?.name}%`) };
       }
+
+      if (param?.scope) {
+        where = { ...where, scope: Like(`%${param?.scope}%`) };
+      }
+
+      if (param?.is_active) {
+        where = { ...where, is_active: param?.is_active };
+      }
+
+      const query = this.appconfigRepo.createQueryBuilder().where(where);
 
       const [findQuery, count] = await query
         .skip(skip)
