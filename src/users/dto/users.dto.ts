@@ -7,9 +7,8 @@ import {
   IsString,
   Length,
   Min,
-  ValidateIf,
 } from 'class-validator';
-import { Gender, UserType } from '../../hash/guard/interface/user.interface';
+import { Gender } from '../../hash/guard/interface/user.interface';
 import { Type } from 'class-transformer';
 import { number } from 'yargs';
 

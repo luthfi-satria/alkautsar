@@ -1,4 +1,11 @@
-import { Controller, Get, Query, Res, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  Res,
+  UseInterceptors,
+} from '@nestjs/common';
 import { AppconfigInterceptor } from '../appconfig/appconfig.interceptor';
 import { ResponseStatusCode } from '../response/response.decorator';
 import { UserTypeAndLevel } from '../hash/guard/user-type-and-level.decorator';
@@ -7,6 +14,9 @@ import { KreditHistoryListDto } from '../kredit/dto/kredit.dto';
 import { HistoryKreditService } from './history_kredit.service';
 import { UserType } from '../hash/guard/user-type.decorator';
 import ExcelJS from 'exceljs';
+import * as fs from 'fs';
+import * as mimeType from 'mime-types';
+import { join } from 'path';
 
 @Controller('api/angsuran')
 @UseInterceptors(AppconfigInterceptor)
@@ -89,5 +99,32 @@ export class HistoryKreditController {
       },
     };
     return style;
+  }
+
+  @Get(':id/image/:name')
+  @ResponseStatusCode()
+  async readFoto(
+    @Param('id') id: string,
+    @Param('name') name: string,
+    @Res() res,
+  ) {
+    if (name) {
+      const file_path = `uploads/kredit/${id}/${name}`;
+      if (fs.existsSync(`./${file_path}`)) {
+        const file = fs.createReadStream(join(process.cwd(), file_path));
+        res.set({
+          'Content-Type': mimeType.lookup(file_path),
+          'Content-Disposition': `attachment; filename="${name}"`,
+        });
+        file.pipe(res, {
+          end: true,
+        });
+      }
+    }
+    // return not found;
+    return {
+      success: false,
+      message: 'image not found',
+    };
   }
 }

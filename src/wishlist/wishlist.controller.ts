@@ -15,7 +15,6 @@ import { UserType } from '../hash/guard/user-type.decorator';
 import { AuthJwtGuard, User } from '../auth/auth.decorator';
 import { WishlistService } from './wishlist.service';
 import { CreateWishDto, UpdateWishDto, WishListDto } from './dto/wishlist.dto';
-import { userInfo } from 'os';
 
 @Controller('api/wish')
 @UseInterceptors(AppconfigInterceptor)

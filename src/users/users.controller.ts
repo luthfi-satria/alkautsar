@@ -36,7 +36,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { editFileName, imageFileFilter } from '../helper/utility.helper';
 import * as fs from 'fs';
-import { UserProfileDocuments } from '../database/entities/profile.entities';
 import { join } from 'path';
 import * as mimeType from 'mime-types';
 import ExcelJS from 'exceljs';

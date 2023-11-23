@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UsergroupService } from '../usergroup/usergroup.service';
 import { AppmenuService } from '../appmenu/appmenu.service';
-import { Cron } from '@nestjs/schedule';
+// import { Cron } from '@nestjs/schedule';
 import { AppconfigService } from '../appconfig/appconfig.service';
 
 @Injectable()

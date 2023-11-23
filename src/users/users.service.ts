@@ -330,7 +330,7 @@ export class UsersService {
         where = { ...where, username: Like(`%${param?.username}%`) };
       }
 
-      if (profile) {
+      if (Object.keys(profile).length > 0) {
         where = { ...where, profile };
       }
       const query = this.usersRepo.createQueryBuilder('user');

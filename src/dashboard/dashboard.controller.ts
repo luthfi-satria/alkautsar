@@ -1,13 +1,7 @@
-import {
-  Controller,
-  Get,
-  Logger,
-  Query,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Controller, Get, Logger, UseInterceptors } from '@nestjs/common';
 import { AppconfigInterceptor } from '../appconfig/appconfig.interceptor';
 import { ResponseStatusCode } from '../response/response.decorator';
-import { AuthJwtGuard, User } from '../auth/auth.decorator';
+import { AuthJwtGuard } from '../auth/auth.decorator';
 import { UsersService } from '../users/users.service';
 import { HistoryKreditService } from '../history_kredit/history_kredit.service';
 import { ProductService } from '../product/product.service';

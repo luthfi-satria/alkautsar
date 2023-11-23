@@ -7,7 +7,14 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InvestorDocuments } from '../database/entities/investor.entities';
-import { IsNull, LessThanOrEqual, Like, MoreThan, Not, Repository } from 'typeorm';
+import {
+  IsNull,
+  LessThanOrEqual,
+  Like,
+  MoreThan,
+  Not,
+  Repository,
+} from 'typeorm';
 import { ResponseService } from '../response/response.service';
 import {
   CreateInvestorDto,
@@ -102,7 +109,7 @@ export class InvestorService {
         query.leftJoinAndSelect('inv.profile', 'profile');
       }
 
-      if (profile) {
+      if (Object.keys(profile).length > 0) {
         where = { ...where, profile };
       }
 

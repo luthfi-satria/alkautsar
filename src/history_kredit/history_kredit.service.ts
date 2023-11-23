@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, ILike, Like, Repository } from 'typeorm';
+import { Between, Like, Repository } from 'typeorm';
 import { ResponseService } from '../response/response.service';
 import { KreditHistoryListDto } from '../kredit/dto/kredit.dto';
 import { RSuccessMessage } from '../response/response.interface';
@@ -77,7 +77,7 @@ export class HistoryKreditService {
         };
       }
 
-      if (profile) {
+      if (Object.keys(profile).length > 0) {
         where = {
           ...where,
           kredit: {

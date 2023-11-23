@@ -1,7 +1,7 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable, HttpStatus, Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { updatePekerjaanDto, updateRekomendasiDto } from './dto/profile.dto';
+import { updatePekerjaanDto } from './dto/profile.dto';
 import { PekerjaanDocument } from './../database/entities/pekerjaan.entities';
 import { ResponseService } from 'src/response/response.service';
 import { UsersService } from './users.service';

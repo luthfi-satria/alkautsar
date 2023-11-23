@@ -12,7 +12,7 @@ import { AppconfigInterceptor } from './../appconfig/appconfig.interceptor';
 import { OmsetService } from './omset.service';
 import { AuthJwtGuard } from '../auth/auth.decorator';
 import { UserType } from '../hash/guard/user-type.decorator';
-import ExcelJS, { Xlsx } from 'exceljs';
+import ExcelJS from 'exceljs';
 
 @Controller('api/omset')
 @UseInterceptors(AppconfigInterceptor)

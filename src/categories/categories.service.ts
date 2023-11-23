@@ -6,11 +6,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThanOrEqual, Like, MoreThan, Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { ResponseService } from '../response/response.service';
 import { RSuccessMessage } from '../response/response.interface';
-import { UsersService } from '../users/users.service';
-import { DatetimeHelper } from '../helper/datetime.helper';
 import { CategoryDocuments } from '../database/entities/categories.entities';
 import {
   CreateCategoryDto,
