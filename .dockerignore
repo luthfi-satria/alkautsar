@@ -2,3 +2,5 @@ node_modules
 uploads
 .git
 .gitignore
+.env
+.env.*
