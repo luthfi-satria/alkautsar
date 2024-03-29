@@ -10,6 +10,7 @@ import {
   UploadedFile,
   Res,
   Logger,
+  Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
@@ -149,6 +150,22 @@ export class UsersController {
   @ResponseStatusCode()
   async update(@Param() param: GetUserDetail, @Body() body: updateProfileDto) {
     return await this.userService.update(param.id, body);
+  }
+
+  @Delete(':id')
+  @UserType('owner')
+  @AuthJwtGuard()
+  @ResponseStatusCode()
+  async delete(@Param() param: GetUserDetail) {
+    return await this.userService.delete(param.id);
+  }
+
+  @Put(':id/restore')
+  @UserType('owner')
+  @AuthJwtGuard()
+  @ResponseStatusCode()
+  async restore(@Param() param: GetUserDetail) {
+    return await this.userService.restore(param.id);
   }
 
   @Put('login_account/:id')

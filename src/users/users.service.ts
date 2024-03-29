@@ -236,6 +236,75 @@ export class UsersService {
     }
   }
 
+  async delete(id) {
+    try {
+      const verifyUser = await this.getOne({ id: id });
+      if (verifyUser) {
+        const saveUpdate = await this.usersRepo
+          .createQueryBuilder()
+          .softDelete()
+          .where({ id: id })
+          .execute();
+        if (saveUpdate) {
+          return this.responseService.success(
+            true,
+            'Akun user telah dihapus!',
+          );
+        }
+        return this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: id,
+            property: 'Akun user',
+            constraint: ['Akun user gagal dihapus!'],
+          },
+          'Akun user gagal dihapus!',
+        );
+      }
+
+      return this.responseService.error(
+        HttpStatus.BAD_REQUEST,
+        {
+          value: id,
+          property: 'Akun user',
+          constraint: ['Akun user tidak ditemukan!'],
+        },
+        'Akun user tidak ditemukan',
+      );
+    } catch (error) {
+      Logger.log(error.message, 'pembaharuan profil tidak berhasil');
+      throw error;
+    }
+  }
+
+  async restore(id) {
+    try {
+      const saveUpdate = await this.usersRepo
+        .createQueryBuilder()
+        .restore()
+        .where({ id: id })
+        .execute();
+      if (saveUpdate) {
+        return this.responseService.success(
+          true,
+          'Akun user telah dikembalikan!',
+        );
+      }
+      return this.responseService.error(
+        HttpStatus.BAD_REQUEST,
+        {
+          value: id,
+          property: 'Akun user',
+          constraint: ['Akun user gagal dikembalikan!'],
+        },
+        'Akun user gagal dikembalikan!',
+      );
+    } catch (error) {
+      Logger.log(error.message, 'pembaharuan profil tidak berhasil');
+      throw error;
+    }
+  }
+
   async updateUserLogin(id, body: Partial<UpdateUserDto>) {
     try {
       const verifyUser = await this.usersRepo.findOneBy({ id: id });
@@ -348,6 +417,7 @@ export class UsersService {
             'user.created_at',
             'group.name',
             'group.level',
+            'user.deleted_at',
           ])
           .leftJoin('user.profile', 'profile')
           .leftJoin('user.usergroup', 'group');
@@ -362,6 +432,7 @@ export class UsersService {
       let count = 0;
       if (raw == false) {
         [findQuery, count] = await query
+          .withDeleted()
           .skip(skip)
           .take(limit)
           .getManyAndCount();
