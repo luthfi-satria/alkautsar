@@ -435,6 +435,7 @@ export class UsersService {
           .withDeleted()
           .skip(skip)
           .take(limit)
+          .orderBy('user.id','DESC')
           .getManyAndCount();
       } else {
         count = await query.getCount();
