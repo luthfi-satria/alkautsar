@@ -26,7 +26,7 @@ export class HistoryKreditController {
 
   @Get('')
   @ResponseStatusCode()
-  @UserTypeAndLevel('owner.*')
+  @UserTypeAndLevel('owner.*', 'organisasi.*', 'public.*')
   @AuthJwtGuard()
   async ListHistoryKredit(
     @User() user: any,
